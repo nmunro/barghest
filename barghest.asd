@@ -5,7 +5,8 @@
   :depends-on (:usocket)
   :components ((:module "src"
                 :components
-                ((:file "main"))))
+                ((:file "request")
+                 (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "barghest/tests"))))
 
