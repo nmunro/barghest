@@ -6,6 +6,7 @@
   :components ((:module "src"
                 :components
                 ((:file "request")
+                 (:file "response")
                  (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "barghest/tests"))))

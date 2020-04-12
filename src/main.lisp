@@ -23,28 +23,24 @@
       ; protect form
       (loop (usocket:with-connected-socket (server-connection (usocket:socket-accept server-socket))
         (with-open-stream (stream (usocket:socket-stream server-connection))
-          (let ((req (barghest.request:make-request stream)))
-              (funcall app req stream)))))
+          (let* ((req (barghest.request:make-request stream))
+                 (res (barghest.response:make-response stream)))
+              (funcall app req res)))))
 
       ; cleanup form
       (format t "Server shut down!~%")
       (usocket:socket-close server-socket))))
 
-(defun hello-world (req stream)
+(defun hello-world (req res)
   (format t "Hello-World: ~A -> ~A~%" (get-datetime) req)
 
   (if (equal (barghest.request:path req) "greeting")
     (if (not (gethash "name" (barghest.request:params req)))
-      (format stream (format-data "<html><form>What is your name?<input name='name' /><form></html>"))
-      (format stream (format-data (format nil "<html>Nice to meet you, ~A!</html>" (gethash "NAME" (barghest.request:params req))))))
+      (barghest.response:send-response res "<html><form>What is your name?<input name='name' /><form></html>")
+      (barghest.response:send-response res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "NAME" (barghest.request:params req)))))
 
-    (format stream (error-404 (barghest.request:path req)))))
+    (error-404 req res)))
 
-(defun error-404 (page)
-  (let* ((msg (format nil "Sorry... I don't know the page: \"~A\"" page))
-         (content-length (length msg)))
-    (format nil "HTTP/1.1 404 Not Found~%Content-Type: text/html~%Content-Length: ~A~%~%~A" content-length msg)))
-
-(defun format-data (content)
-  (let ((content-length (length content)))
-    (format nil "HTTP/1.1 200 OK~%Content-Type: text/html~%Content-Length: ~A~%~%~A" content-length content)))
+(defun error-404 (req res)
+  (setf (barghest.response:status-code res) "404 Not Found")
+  (barghest.response:send-response res (format nil "Sorry... I don't know the page: \"~A\"" (barghest.request:path req))))
