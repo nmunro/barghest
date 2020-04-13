@@ -8,14 +8,6 @@
 (defparameter *address* "127.0.0.1")
 (defparameter *port* 8080)
 
-(defun get-datetime ()
-  (multiple-value-bind
-    (second minute hour date month year day-of-week dst-p tz)
-    (get-decoded-time)
-    (declare (ignore day-of-week))
-    (declare (ignore dst-p))
-    (format nil "~2,'0d/~2,'0d/~A ~2,'0d:~2,'0d:~2,'0d (UTC~@d)" date month year hour minute second (- tz))))
-
 (defun serve (app)
   (usocket:with-server-socket (server-socket (usocket:socket-listen *address* *port*))
     (format t "Starting server on: ~A:~A~%" *address* *port*)
@@ -23,8 +15,9 @@
       ; protect form
       (loop (usocket:with-connected-socket (server-connection (usocket:socket-accept server-socket))
         (with-open-stream (stream (usocket:socket-stream server-connection))
-          (let* ((req (barghest.request:make-request stream))
-                 (res (barghest.response:make-response stream)))
+          ; Request and response objects are created here
+          (let ((req (barghest.request:make-request stream))
+                (res (barghest.response:make-response stream)))
               (funcall app req res)))))
 
       ; cleanup form
@@ -32,12 +25,12 @@
       (usocket:socket-close server-socket))))
 
 (defun hello-world (req res)
-  (format t "Hello-World: ~A -> ~A~%" (get-datetime) req)
+  (format t "Hello-World: ~A -> ~A~%" (barghest.datetime:datetime) req)
 
   (if (equal (barghest.request:path req) "greeting")
-    (if (not (gethash "name" (barghest.request:params req)))
+    (if (not (gethash "name" (barghest.request:args req)))
       (barghest.response:send-response res "<html><form>What is your name?<input name='name' /><form></html>")
-      (barghest.response:send-response res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "NAME" (barghest.request:params req)))))
+      (barghest.response:send-response res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "NAME" (barghest.request:args req)))))
 
     (error-404 req res)))
 

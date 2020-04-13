@@ -5,7 +5,8 @@
   :depends-on (:usocket)
   :components ((:module "src"
                 :components
-                ((:file "request")
+                ((:file "datetime")
+                 (:file "request")
                  (:file "response")
                  (:file "main"))))
   :description ""

@@ -4,47 +4,58 @@
            #:action
            #:path
            #:header
-           #:params
+           #:args
+           #:body
            #:make-request))
 (in-package :barghest.request)
 
 (defclass request ()
-  ((action :initarg :action  :initform "GET"             :reader action)
-   (path   :initarg :path    :initform "/"               :reader path)
-   (header :initarg :header  :initform (make-hash-table) :reader header)
-   (params :initarg :params  :initform (make-hash-table) :reader params)))
+  ((action :initarg :action  :initform (error "No HTTP Method provided") :reader action)
+   (path   :initarg :path    :initform (error "No Path provided")        :reader path)
+   (header :initarg :header  :initform (make-hash-table :test #'equalp)  :reader header)
+   (args   :initarg :args    :initform (make-hash-table :test #'equalp)  :reader args)
+   (body   :initarg :body    :initform ""                                :reader body)))
 
 (defmethod print-object ((object request) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "~A: /~A" (action object) (path object))))
 
 (defgeneric action (obj)
-  (:documentation "Returns the url action"))
+  (:documentation "Returns the request action"))
 
 (defgeneric path (obj)
-  (:documentation "Returns the url path"))
+  (:documentation "Returns the request path"))
 
 (defgeneric header (obj)
-  (:documentation "Returns the url header"))
+  (:documentation "Returns the request header"))
 
-(defgeneric params (obj)
-  (:documentation "Returns the url params"))
+(defgeneric args (obj)
+  (:documentation "Returns the request args"))
+
+(defgeneric body (obj)
+  (:documentation "Returns the request body"))
 
 (defun make-request (stream)
-  (let* ((parsed-url    (parse-url (read-line stream)))
-         (parsed-path   (first parsed-url))
+  (let* ((req           (parse-status-line (read-line stream)))
+         (action        (gethash "action" req))
+         (parsed-path   (gethash "url" req))
          (parsed-header (get-header stream))
-         (parsed-params (append (rest parsed-url) (get-content-params stream parsed-header)))
-         (headers (make-hash-table :test #'equalp))
-         (params (make-hash-table :test #'equalp)))
+         (parsed-params (append (gethash "params" req) (get-content-params stream parsed-header)))
+         (headers       (make-hash-table :test #'equalp))
+         (args          (make-hash-table :test #'equalp)))
 
     (dolist (header parsed-header)
       (setf (gethash (string (first header)) headers) (rest header)))
 
     (dolist (param parsed-params)
-      (setf (gethash (string (first param)) params) (rest param)))
+      (setf (gethash (string (first param)) args) (rest param)))
 
-    (make-instance 'request :path parsed-path :header headers :params params)))
+    ;; Get the request body!
+    ;; Remember to put a cond here to determine if its a form upload or a json push or something, detect the type of data
+    ;; in the body
+    (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers) :junk-allowed t))))
+      (read-sequence body stream)
+      (make-instance 'request :action action :path parsed-path :header headers :args args :body body))))
 
 (defun http-char (c1 c2 &optional (default #\Space))
   "Return the code char of the parsed integer, or the default parameter"
@@ -62,6 +73,7 @@
            (#\% (cons (http-char (cadr lst) (caddr lst)) (f (cdddr lst))))
            (#\+ (cons #\Space (f (cdr lst))))
            (otherwise (cons (car lst) (f (cdr lst))))))))
+
       (coerce (f (coerce s 'list)) 'string)))
 
 (defun parse-params (s)
@@ -73,21 +85,32 @@
           ((equal s "") nil)
           (t s))))
 
-(defun parse-url (s)
+(defun parse-status-line (s)
   (let* ((url (subseq s (+ 2 (position #\Space s)) (position #\Space s :from-end t)))
-         (x (position #\? url)))
-    (if x
-        (cons (subseq url 0 x) (parse-params (subseq url (1+ x))))
-        (cons url '()))))
+         (args (position #\? url))
+         (action (subseq s 0 (position #\Space s)))
+         (data (make-hash-table :test #'equalp)))
+
+      (setf (gethash "action" data) action)
+
+      (if args
+        (progn
+          (setf (gethash "url" data) (subseq url 0 args))
+          (setf (gethash "params" data) (parse-params (subseq url (1+ args)))))
+
+        (progn
+          (setf (gethash "url" data) url)
+          (setf (gethash "params" data) '())))
+    data))
 
 (defun get-header (stream)
-  (let* ((s (read-line stream))
-         (h (let ((i (position #\: s)))
-              (when i
-                (cons (intern (string-upcase (subseq s 0 i)))
-                      (subseq s (+ i 2)))))))
-    (when h
-      (cons h (get-header stream)))))
+  (let* ((line (read-line stream))
+         (header (let ((key-value-split (position #\: line)))
+              (when key-value-split
+                (cons (intern (string-upcase (subseq line 0 key-value-split)))
+                      (subseq line (+ key-value-split 2)))))))
+    (when header
+      (cons header (get-header stream)))))
 
 (defun get-content-params (stream header)
   (let ((length (cdr (assoc 'content-length header))))
