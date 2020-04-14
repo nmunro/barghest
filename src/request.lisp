@@ -53,7 +53,7 @@
     ;; Get the request body!
     ;; Remember to put a cond here to determine if its a form upload or a json push or something, detect the type of data
     ;; in the body
-    (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers) :junk-allowed t))))
+    (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers "0") :junk-allowed t))))
       (read-sequence body stream)
       (make-instance 'request :action action :path parsed-path :header headers :args args :body body))))
 

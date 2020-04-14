@@ -35,5 +35,5 @@
     (error-404 req res)))
 
 (defun error-404 (req res)
-  (setf (barghest.response:status-code res) "404 Not Found")
+  (setf (barghest.response:status-code res) (barghest.status-codes:make-status-code :404))
   (barghest.response:send-response res (format nil "Sorry... I don't know the page: \"~A\"" (barghest.request:path req))))

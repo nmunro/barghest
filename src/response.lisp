@@ -9,9 +9,9 @@
 (in-package :barghest.response)
 
 (defclass response ()
-  ((status-code :initarg :status-code :initform "200 OK"          :accessor status-code)
-   (header      :initarg :header      :initform (make-hash-table) :accessor header)
-   (content     :initarg :content     :initform ""                :accessor content)))
+  ((status-code :initarg :status-code :initform (barghest.status-codes:make-status-code :200) :accessor status-code)
+   (header      :initarg :header      :initform (make-hash-table)                             :accessor header)
+   (content     :initarg :content     :initform ""                                            :accessor content)))
 
 (defgeneric status-code (obj)
   (:documentation "Gets the status-code of the response object"))
@@ -30,11 +30,15 @@
     (format stream "~A: /~A" (action response) (path response))))
 
 (defmethod send-response ((response response) data)
-  (format (content response) (format-data (status-code response) data)))
+  (format (content response) (format-response (status-code response) data)))
 
 (defun make-response (stream)
   (make-instance 'response :content stream))
 
-(defun format-data (status content)
+(defun format-response (status content)
   (let ((content-length (length content)))
-    (format nil "HTTP/1.1 ~A~%Content-Type: text/html~%Content-Length: ~A~%~%~A" status content-length content)))
+    (format nil
+            "~A~%Content-Type: text/html~%Content-Length: ~A~%~%~A"
+            (format nil "HTTP/1.1 ~A ~A" (barghest.status-codes:code status) (barghest.status-codes:description status))
+            content-length
+            content)))
