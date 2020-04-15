@@ -19,7 +19,8 @@
           ; Request and response objects are created here
           (let ((req (make-request  stream))
                 (res (make-response stream)))
-              (funcall app req res)))))
+            (handler-case (funcall app req res)
+              (error () (render-error :500 res)))))))
 
       ; cleanup form
       (format t "Server shut down!~%")
@@ -33,8 +34,9 @@
       (render res "<html><form>What is your name?<input name='name' /><form></html>")
       (render res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "name" (barghest.request:args req)))))
 
-    (request-abort :404 req res)))
+    (render-error :404 res)))
 
-(defun request-abort (status req res)
-  (setf (barghest.response:status res) (make-status-code status))
-  (render res (format nil "Sorry... I don't know the page: \"~A\"" (barghest.request:path req))))
+(defun render-error (status res)
+  (let ((s (make-status-code status)))
+    (setf (barghest.response:status res) s)
+    (render res (format nil "~A: ~A~%" (barghest.http:code s) (barghest.http:description s)))))
