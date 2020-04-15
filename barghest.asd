@@ -6,7 +6,7 @@
   :components ((:module "src"
                 :components
                 ((:file "datetime")
-                 (:file "status-codes")
+                 (:file "http")
                  (:file "request")
                  (:file "response")
                  (:file "main"))))

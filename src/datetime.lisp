@@ -3,7 +3,7 @@
   (:export #:datetime))
 (in-package :barghest.datetime)
 
-(defun datetime ()
+(defun datetime-now ()
   (multiple-value-bind
     (second minute hour date month year day-of-week dst-p tz)
     (get-decoded-time)

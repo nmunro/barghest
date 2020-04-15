@@ -1,9 +1,9 @@
-(defpackage barghest.status-codes
+(defpackage barghest.http
   (:use :cl)
   (:export #:code
            #:description
            #:make-status-code))
-(in-package :barghest.status-codes)
+(in-package :barghest.http)
 
 (defparameter codes
   '(; Informational response

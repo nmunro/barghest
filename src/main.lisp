@@ -1,22 +1,24 @@
 (defpackage barghest
   (:use :cl)
-  (:import-from :barghest.datetime     :datetime)
-  (:import-from :barghest.status-codes :make-status-code)
+  (:import-from :barghest.datetime     :datetime-now)
+  (:import-from :barghest.http         :make-status-code)
+  (:import-from :barghest.request      :make-request)
   (:import-from :barghest.response     :render)
+  (:import-from :barghest.response     :make-response)
   (:export #:serve
            #:hello-world))
 (in-package :barghest)
 
 (defun serve (app &key (address "127.0.0.1") (port 8080))
   (usocket:with-server-socket (server-socket (usocket:socket-listen address port))
-    (format t "Starting server on: ~A:~A~%" *address* *port*)
+    (format t "Starting server on: ~A:~A~%" address port)
     (unwind-protect
       ; protect form
       (loop (usocket:with-connected-socket (server-connection (usocket:socket-accept server-socket))
         (with-open-stream (stream (usocket:socket-stream server-connection))
           ; Request and response objects are created here
-          (let ((req (barghest.request:make-request   stream))
-                (res (barghest.response:make-response stream)))
+          (let ((req (make-request  stream))
+                (res (make-response stream)))
               (funcall app req res)))))
 
       ; cleanup form
@@ -24,7 +26,7 @@
       (usocket:socket-close server-socket))))
 
 (defun hello-world (req res)
-  (format t "Hello-World: ~A -> ~A~%" (datetime) req)
+  (format t "Hello-World: ~A -> ~A~%" (datetime-now) req)
 
   (if (equal (barghest.request:path req) "greeting")
     (if (not (gethash "name" (barghest.request:args req)))

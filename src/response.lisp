@@ -1,5 +1,6 @@
 (defpackage barghest.response
   (:use :cl)
+  (:import-from :barghest.http :make-status-code)
   (:export #:response
            #:status
            #:header
@@ -9,7 +10,7 @@
 (in-package :barghest.response)
 
 (defclass response ()
-  ((status      :initarg :status      :initform (barghest.status-codes:make-status-code :200) :accessor status)
+  ((status      :initarg :status      :initform (make-status-code :200) :accessor status)
    (header      :initarg :header      :initform (make-hash-table)                             :accessor header)
    (body        :initarg :body        :initform ""                                            :accessor body)))
 
@@ -27,8 +28,11 @@
     (format stream "~A: /~A" (action response) (path response))))
 
 (defun build-status-line (status)
-  (format nil "HTTP/1.1 ~A ~A" (barghest.status-codes:code status) (barghest.status-codes:description status)))
+  (format nil "HTTP/1.1 ~A ~A" (barghest.http:code status) (barghest.http:description status)))
 
+;; TODO: Need to add a second stream that can be written to independent of the socket stream
+;; this is what a programmer can write to during building of a response
+;; the render method will then copy the programmer writable stream to the socket stream
 (defun render (response content)
   (let ((content-length (length content)))
     (format (body response)
