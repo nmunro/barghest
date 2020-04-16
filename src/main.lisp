@@ -6,6 +6,7 @@
   (:import-from :barghest.http         :server-error)
   (:import-from :barghest.request      :make-request)
   (:import-from :barghest.response     :render)
+  (:import-from :barghest.response     :render-error)
   (:import-from :barghest.response     :make-response)
   (:export #:serve
            #:hello-world))
@@ -40,9 +41,3 @@
       (render res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "name" (barghest.request:args req)))))
 
     (error 'client-error :err-code :404)))
-
-(defun render-error (err res)
-  (let ((e (make-status-code (barghest.http:err-code err))))
-    (format t "ERROR: ~A -> ~A~%" (barghest.http:code e) (barghest.http:description e))
-    (setf (barghest.response:status res) e)
-    (render res (format nil "~A: ~A~%" (barghest.http:code e) (barghest.http:description e)))))

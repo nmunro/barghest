@@ -41,5 +41,11 @@
             content-length
             content)))
 
+(defun render-error (err res)
+  (let ((e (make-status-code (barghest.http:err-code err))))
+    (format t "ERROR: ~A -> ~A~%" (barghest.http:code e) (barghest.http:description e))
+    (setf (status res) e)
+    (render res (format nil "~A: ~A~%" (barghest.http:code e) (barghest.http:description e)))))
+
 (defun make-response (stream)
   (make-instance 'response :body stream))
