@@ -2,6 +2,8 @@
   (:use :cl)
   (:export #:code
            #:description
+           #:err-code
+           #:err-description
            #:make-status-code))
 (in-package :barghest.http)
 
@@ -96,3 +98,18 @@
 (defun make-status-code (code)
   (let ((status (getf codes code)))
     (make-instance 'status-code :code code :description status)))
+
+(define-condition http-error (error)
+  ((err-code :initarg :err-code :initform (error "Must provide a code") :reader err-code))
+  (:report (lambda (condition stream)
+             (let ((a-code (make-status-code (err-code condition))))
+                (format stream "~A: ~A" (code a-code) (description a-code))))))
+
+(defgeneric err-code (obj)
+  (:documentation "Gets the code of the http-error object"))
+
+(define-condition client-error (http-error)
+  ((code :initarg :err-code :initform :400 :reader err-code)))
+
+(define-condition server-error (http-error)
+  ((code :initarg :err-code :initform :500 :reader err-code)))
