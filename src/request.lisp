@@ -3,18 +3,18 @@
   (:export #:request
            #:action
            #:path
-           #:header
+           #:headers
            #:args
            #:body
            #:make-request))
 (in-package :barghest.request)
 
 (defclass request ()
-  ((action :initarg :action  :initform (error "No HTTP Method provided") :reader action)
-   (path   :initarg :path    :initform (error "No Path provided")        :reader path)
-   (header :initarg :header  :initform (make-hash-table :test #'equalp)  :reader header)
-   (args   :initarg :args    :initform (make-hash-table :test #'equalp)  :reader args)
-   (body   :initarg :body    :initform ""                                :reader body)))
+  ((action  :initarg :action  :initform (error "No HTTP Method provided") :reader action)
+   (path    :initarg :path    :initform (error "No Path provided")        :reader path)
+   (headers :initarg :headers :initform (make-hash-table :test #'equalp)  :reader headers)
+   (args    :initarg :args    :initform (make-hash-table :test #'equalp)  :reader args)
+   (body    :initarg :body    :initform ""                                :reader body)))
 
 (defmethod print-object ((object request) stream)
   (print-unreadable-object (object stream :type t)
@@ -26,14 +26,31 @@
 (defgeneric path (obj)
   (:documentation "Returns the request path"))
 
-(defgeneric header (obj)
-  (:documentation "Returns the request header"))
+(defgeneric headers (obj)
+  (:documentation "Returns the request headers"))
 
 (defgeneric args (obj)
   (:documentation "Returns the request args"))
 
 (defgeneric body (obj)
   (:documentation "Returns the request body"))
+
+(defun multipart/form-data (data)
+  data)
+
+(defun application/x-www-form-urlencoded (data)
+  data)
+
+(defun application/json (data)
+  data)
+
+(defun format-body (header data)
+  (let ((content-type (string-trim '(#\Return) (subseq header 0 (search ";" header)))))
+    (cond
+        ((string= content-type "application/json") (application/json data))
+        ((string= content-type "application/x-www-form-urlencoded") (application/x-www-form-urlencoded data))
+        ((string= content-type "multipart/form-data") (multipart/form-data data))
+        (t data))))
 
 (defun make-request (stream)
   (let* ((req           (parse-status-line (read-line stream)))
@@ -50,12 +67,9 @@
     (dolist (param parsed-params)
       (setf (gethash (string (first param)) args) (rest param)))
 
-    ;; Get the request body!
-    ;; Remember to put a cond here to determine if its a form upload or a json push or something, detect the type of data
-    ;; in the body
     (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers "0") :junk-allowed t))))
       (read-sequence body stream)
-      (make-instance 'request :action action :path parsed-path :header headers :args args :body body))))
+      (make-instance 'request :action action :path parsed-path :headers headers :args args :body (format-body (gethash "content-type" headers "text/html") body)))))
 
 (defun http-char (c1 c2 &optional (default #\Space))
   "Return the code char of the parsed integer, or the default parameter"
