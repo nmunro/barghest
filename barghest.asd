@@ -9,6 +9,7 @@
                  (:file "http")
                  (:file "request")
                  (:file "response")
+                 (:file "templates")
                  (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "barghest/tests"))))

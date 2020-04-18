@@ -8,6 +8,7 @@
   (:import-from :barghest.response     :render)
   (:import-from :barghest.response     :render-error)
   (:import-from :barghest.response     :make-response)
+  (:import-from :barghest.templates    :load-template)
   (:export #:serve
            #:hello-world))
 (in-package :barghest)
@@ -35,9 +36,13 @@
 (defun hello-world (req res)
   (format t "Hello-World: ~A -> ~A~%" (datetime-now) req)
 
-  (if (equal (barghest.request:path req) "greeting")
-    (if (not (gethash "name" (barghest.request:args req)))
+  (cond
+    ((equal (barghest.request:path req) "greeting")
+     (if (not (gethash "name" (barghest.request:args req)))
       (render res "<html><form>What is your name?<input name='name' /><form></html>")
-      (render res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "name" (barghest.request:args req)))))
+      (render res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "name" (barghest.request:args req))))))
 
-    (error 'client-error :err-code :404)))
+    ((equal (barghest.request:path req) "")
+     (render res (barghest.templates:load-template #p"index.html")))
+
+    (t (error 'client-error :err-code :404))))
