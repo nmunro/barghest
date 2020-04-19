@@ -6,6 +6,8 @@
            #:headers
            #:args
            #:body
+           #:form
+           #:files
            #:make-request))
 (in-package :barghest.request)
 
@@ -14,6 +16,8 @@
    (path    :initarg :path    :initform (error "No Path provided")        :reader path)
    (headers :initarg :headers :initform (make-hash-table :test #'equalp)  :reader headers)
    (args    :initarg :args    :initform (make-hash-table :test #'equalp)  :reader args)
+   (form    :initarg :form    :initform (make-hash-table :test #'equalp)  :reader form)
+   (files   :initarg :files   :initform (make-hash-table :test #'equalp)  :reader files)
    (body    :initarg :body    :initform ""                                :reader body)))
 
 (defmethod print-object ((object request) stream)
@@ -35,19 +39,24 @@
 (defgeneric body (obj)
   (:documentation "Returns the request body"))
 
+(defgeneric form (obj)
+  (:documentation "Returns the post form data"))
+
+(defgeneric files (obj)
+  (:documentation "Returns the post files data"))
+
 (defun multipart/form-data (data)
+  "This is where files need to be dealt with"
+  (format t "multipart/form-data~%")
   data)
 
 (defun application/x-www-form-urlencoded (data)
-  data)
-
-(defun application/json (data)
-  data)
+  "This doesn't deal with files, so just don't worry about those"
+  (parse-params data))
 
 (defun format-body (header data)
   (let ((content-type (string-trim '(#\Return) (subseq header 0 (search ";" header)))))
     (cond
-        ((string= content-type "application/json") (application/json data))
         ((string= content-type "application/x-www-form-urlencoded") (application/x-www-form-urlencoded data))
         ((string= content-type "multipart/form-data") (multipart/form-data data))
         (t data))))
@@ -61,15 +70,26 @@
          (headers       (make-hash-table :test #'equalp))
          (args          (make-hash-table :test #'equalp)))
 
+    ; build and set the headers
     (dolist (header parsed-header)
       (setf (gethash (string (first header)) headers) (rest header)))
 
+    ; build and set the get parameters
     (dolist (param parsed-params)
       (setf (gethash (string (first param)) args) (rest param)))
 
     (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers "0") :junk-allowed t))))
       (read-sequence body stream)
-      (make-instance 'request :action action :path parsed-path :headers headers :args args :body (format-body (gethash "content-type" headers "text/html") body)))))
+      (make-instance 'request :action action :path parsed-path :headers headers :args args :body body))))
+
+(defmethod initialize-instance :after ((request request) &rest args)
+  "This function does some post-processing with the body parameter after the object has been created"
+  ; Basically if there's data in the body and some how it represents form data, then extract the form data
+  ; put it into form and files respectively, otherwise just leave it in the body for something else to consume
+  (let ((parsed-params (format-body (gethash "content-type" (headers request) "text/html") (body request))))
+    (when (listp parsed-params)
+      (dolist (param parsed-params)
+        (setf (gethash (string (first param)) (form request)) (rest param))))))
 
 (defun http-char (c1 c2 &optional (default #\Space))
   "Return the code char of the parsed integer, or the default parameter"
@@ -100,10 +120,10 @@
           (t s))))
 
 (defun parse-status-line (s)
-  (let* ((url (subseq s (+ 2 (position #\Space s)) (position #\Space s :from-end t)))
-         (args (position #\? url))
+  (let* ((url    (subseq s (+ 2 (position #\Space s)) (position #\Space s :from-end t)))
+         (args   (position #\? url))
          (action (subseq s 0 (position #\Space s)))
-         (data (make-hash-table :test #'equalp)))
+         (data   (make-hash-table :test #'equalp)))
 
       (setf (gethash "action" data) action)
 

@@ -42,6 +42,9 @@
     ((equal (barghest.request:path req) "greeting")
      (render res (djula:render-template* (djula:compile-template* "greeting.html") nil :name (gethash "name" (barghest.request:args req)))))
 
+    ((equal (barghest.request:path req) "post")
+     (render res (djula:render-template* (djula:compile-template* "post.html"))))
+
     ((equal (barghest.request:path req) "")
      (render res (djula:render-template* (djula:compile-template* "index.html"))))
 
