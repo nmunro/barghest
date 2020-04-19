@@ -2,14 +2,14 @@
   :version "0.1.0"
   :author ""
   :license ""
-  :depends-on (:usocket)
+  :depends-on (:usocket
+               :djula)
   :components ((:module "src"
                 :components
                 ((:file "datetime")
                  (:file "http")
                  (:file "request")
                  (:file "response")
-                 (:file "templates")
                  (:file "main"))))
   :description ""
   :in-order-to ((test-op (test-op "barghest/tests"))))

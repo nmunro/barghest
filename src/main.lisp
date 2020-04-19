@@ -8,10 +8,12 @@
   (:import-from :barghest.response     :render)
   (:import-from :barghest.response     :render-error)
   (:import-from :barghest.response     :make-response)
-  (:import-from :barghest.templates    :load-template)
   (:export #:serve
            #:hello-world))
 (in-package :barghest)
+
+; Load the djula templates here for now
+(djula:add-template-directory (asdf:system-relative-pathname "barghest" "templates/"))
 
 (defun serve (app &key (address "127.0.0.1") (port 8080))
   (usocket:with-server-socket (server-socket (usocket:socket-listen address port))
@@ -38,11 +40,9 @@
 
   (cond
     ((equal (barghest.request:path req) "greeting")
-     (if (not (gethash "name" (barghest.request:args req)))
-      (render res "<html><form>What is your name?<input name='name' /><form></html>")
-      (render res (format nil "<html>Nice to meet you, ~A!</html>" (gethash "name" (barghest.request:args req))))))
+     (render res (djula:render-template* (djula:compile-template* "greeting.html") nil :name (gethash "name" (barghest.request:args req)))))
 
     ((equal (barghest.request:path req) "")
-     (render res (barghest.templates:load-template #p"index.html")))
+     (render res (djula:render-template* (djula:compile-template* "index.html"))))
 
     (t (error 'client-error :err-code :404))))
