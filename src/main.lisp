@@ -45,6 +45,9 @@
     ((equal (barghest.request:path req) "post")
      (render res (djula:render-template* (djula:compile-template* "post.html"))))
 
+    ((equal (barghest.request:path req) "post-file")
+     (render res (djula:render-template* (djula:compile-template* "post-file.html"))))
+
     ((equal (barghest.request:path req) "")
      (render res (djula:render-template* (djula:compile-template* "index.html"))))
 
