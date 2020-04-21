@@ -45,21 +45,19 @@
 (defgeneric files (obj)
   (:documentation "Returns the post files data"))
 
-(defun multipart/form-data (data)
+(defun multipart/form-data (action path headers args stream)
   "This is where files need to be dealt with"
-  (format t "multipart/form-data~%")
-  data)
 
-(defun application/x-www-form-urlencoded (data)
+  (let ((body (make-array (parse-integer (gethash "content-length" headers "0") :junk-allowed t) :element-type '(unsigned-byte 8))))
+    (read-sequence body stream)
+    (make-instance 'request :action action :path path :headers headers :args args :body body)))
+
+(defun application/x-www-form-urlencoded (action path headers args stream)
   "This doesn't deal with files, so just don't worry about those"
-  (parse-params data))
 
-(defun format-body (header data)
-  (let ((content-type (string-trim '(#\Return) (subseq header 0 (search ";" header)))))
-    (cond
-        ((string= content-type "application/x-www-form-urlencoded") (application/x-www-form-urlencoded data))
-        ((string= content-type "multipart/form-data") (multipart/form-data data))
-        (t data))))
+  (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers "0") :junk-allowed t))))
+    (read-sequence body stream)
+    (make-instance 'request :action action :path path :headers headers :args args :body body)))
 
 (defun make-request (stream)
   (let* ((req           (parse-status-line (read-line stream)))
@@ -72,24 +70,25 @@
 
     ; build and set the headers
     (dolist (header parsed-header)
-      (setf (gethash (string (first header)) headers) (rest header)))
+      (setf (gethash (string (first header)) headers) (string-trim '(#\Return) (subseq (rest header) 0 (search ";" (rest header))))))
 
     ; build and set the get parameters
     (dolist (param parsed-params)
       (setf (gethash (string (first param)) args) (rest param)))
 
-    (let ((body (make-sequence 'string (parse-integer (gethash "content-length" headers "0") :junk-allowed t))))
-      (read-sequence body stream)
-      (make-instance 'request :action action :path parsed-path :headers headers :args args :body body))))
+    (let ((content-type (gethash "content-type" headers "text/html")))
+        (cond
+          ((string= "multipart/form-data" content-type)
+           (multipart/form-data action parsed-path headers args stream))
+
+          (t (application/x-www-form-urlencoded action parsed-path headers args stream))))))
 
 (defmethod initialize-instance :after ((request request) &rest args)
   "This function does some post-processing with the body parameter after the object has been created"
   ; Basically if there's data in the body and some how it represents form data, then extract the form data
   ; put it into form and files respectively, otherwise just leave it in the body for something else to consume
-  (let ((parsed-params (format-body (gethash "content-type" (headers request) "text/html") (body request))))
-    (when (listp parsed-params)
-      (dolist (param parsed-params)
-        (setf (gethash (string (first param)) (form request)) (rest param))))))
+
+  (declare (ignore args)))
 
 (defun http-char (c1 c2 &optional (default #\Space))
   "Return the code char of the parsed integer, or the default parameter"
