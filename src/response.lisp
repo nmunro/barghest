@@ -10,9 +10,11 @@
 (in-package :barghest.response)
 
 (defclass response ()
-  ((status      :initarg :status      :initform (make-status-code :200) :accessor status)
-   (header      :initarg :header      :initform (make-hash-table)                             :accessor header)
-   (body        :initarg :body        :initform ""                                            :accessor body)))
+  ((status      :initarg :status :initform (make-status-code :200) :accessor status)
+   (header      :initarg :header :initform (make-hash-table)       :accessor header)
+   (body        :initarg :body   :initform ""                      :accessor body)
+   (action      :initarg :action :initform "GET"                   :accessor action)
+   (path        :initarg :path   :initform ""                      :accessor path)))
 
 (defgeneric status (obj)
   (:documentation "Gets the status-code of the response object"))

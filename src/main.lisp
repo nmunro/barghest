@@ -1,6 +1,6 @@
 (defpackage barghest
-  (:use :cl)
-  (:import-from :barghest.datetime     :datetime-now)
+  (:use :cl
+        :barghest.datetime)
   (:import-from :barghest.http         :make-status-code)
   (:import-from :barghest.http         :client-error)
   (:import-from :barghest.http         :server-error)
@@ -18,6 +18,7 @@
 (defun serve (app &key (address "127.0.0.1") (port 8080))
   (usocket:with-server-socket (server-socket (usocket:socket-listen address port))
     (format t "Starting server on: ~A:~A~%" address port)
+
     (unwind-protect
       ; protect form
       (loop (usocket:with-connected-socket (server-connection (usocket:socket-accept server-socket))

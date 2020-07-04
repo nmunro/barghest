@@ -1,6 +1,6 @@
 (defpackage barghest.datetime
   (:use :cl)
-  (:export #:datetime))
+  (:export #:datetime-now))
 (in-package :barghest.datetime)
 
 (defun datetime-now ()

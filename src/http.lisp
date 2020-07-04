@@ -85,12 +85,6 @@
   ((code        :initarg :code        :initform "" :reader code)
    (description :initarg :description :initform "" :reader description)))
 
-(defgeneric code (obj)
-  (:documentation "Gets the code of the status code object"))
-
-(defgeneric description (obj)
-  (:documentation "Gets the code of the status code object"))
-
 (defmethod print-object ((object status-code) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "~A: ~A" (code object) (description object))))
@@ -104,9 +98,6 @@
   (:report (lambda (condition stream)
              (let ((a-code (make-status-code (err-code condition))))
                 (format stream "~A: ~A" (code a-code) (description a-code))))))
-
-(defgeneric err-code (obj)
-  (:documentation "Gets the code of the http-error object"))
 
 (define-condition client-error (http-error)
   ((code :initarg :err-code :initform :400 :reader err-code)))

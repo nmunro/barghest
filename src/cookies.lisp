@@ -34,13 +34,10 @@
                    :httponly  (getf cookie-data :httponly)
                    :same-site (getf cookie-data :same-site))))
 
-(defun split-= (s)
-  (uiop:split-string s :separator "="))
-
 (defun parse-cookie (s)
   ; Need to get the first k=v pair and store that as name and value
   (let* ((data (mapcar #'(lambda (x) (string-trim '(#\Space) x)) (uiop:split-string s :separator ";")))
-       (parsed-data (mapcar #'split-= data))
+       (parsed-data (mapcar #'(lambda (s) (uiop:split-string s :separator "=")) data))
        (rtn '()))
 
     ; sort out the cookie key and value first

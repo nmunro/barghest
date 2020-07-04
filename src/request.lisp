@@ -48,9 +48,10 @@
 (defun multipart/form-data (action path headers args stream)
   "This is where files need to be dealt with"
 
-  (let ((body (make-array (parse-integer (gethash "content-length" headers "0") :junk-allowed t) :element-type '(unsigned-byte 8))))
-    (read-sequence body stream)
-    (make-instance 'request :action action :path path :headers headers :args args :body body)))
+  (make-instance 'request :action action :path path :headers headers :args args))
+  ;(let ((body (make-array (parse-integer (gethash "content-length" headers "0") :junk-allowed t) :element-type '(unsigned-byte 8))))
+  ;  (read-sequence body stream)
+  ;  (make-instance 'request :action action :path path :headers headers :args args :body body)))
 
 (defun application/x-www-form-urlencoded (action path headers args stream)
   "This doesn't deal with files, so just don't worry about those"
@@ -151,3 +152,15 @@
       (let ((content (make-string (parse-integer length))))
         (read-sequence content stream)
         (parse-params content)))))
+
+(defparameter post-1 #p"~/quicklisp/local-projects/barghest/post-data-1.txt")
+(defparameter post-2 #p"~/quicklisp/local-projects/barghest/post-data-2.txt")
+
+(let ((lines (uiop:read-file-lines post-2)))
+  (dolist (line lines)
+    (format t "~A~%" line)))
+
+(with-open-file (in post-1)
+  (let ((req (make-request in)))
+    (format t "~A~%" req)
+    (maphash #'(lambda (k v) (format t "    ~A: ~A~%" k v)) (headers req))))
