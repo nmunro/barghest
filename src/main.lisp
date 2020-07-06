@@ -26,7 +26,7 @@
           ; Request and response objects are created here
           (let ((req (make-request  stream))
                 (res (make-response stream)))
-            (handler-case (funcall app req res)
+            (handler-case (apply app `(,req ,res))
               ; handle 4xx errors
               (client-error (err) (render-error err res))
               ; handle 5xx errors
