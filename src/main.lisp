@@ -1,55 +1,158 @@
 (defpackage barghest
-  (:use :cl
-        :barghest.datetime)
-  (:import-from :barghest.http         :make-status-code)
-  (:import-from :barghest.http         :client-error)
-  (:import-from :barghest.http         :server-error)
-  (:import-from :barghest.request      :make-request)
-  (:import-from :barghest.response     :render)
-  (:import-from :barghest.response     :render-error)
-  (:import-from :barghest.response     :make-response)
-  (:export #:serve
-           #:hello-world))
+  (:use :cl)
+  (:export #:start-project
+           #:start-app
+           #:start-server
+           #:stop-server
+           #:make-migrations
+           #:migrate))
 (in-package :barghest)
 
-; Load the djula templates here for now
-(djula:add-template-directory (asdf:system-relative-pathname "barghest" "templates/"))
+(defun start-project (name)
+    (multiple-value-bind (root created)
+        (ensure-directories-exist (build-path name))
 
-(defun serve (app &key (address "127.0.0.1") (port 8080))
-  (usocket:with-server-socket (server-socket (usocket:socket-listen address port))
-    (format t "Starting server on: ~A:~A~%" address port)
+      (if created
+          (progn
+            (write-asd-file root name)
+            (write-readme root name)
+            (build-admin-app root name)
+            (format nil "Starting project '~A' in ~A" name root))
 
-    (unwind-protect
-      ; protect form
-      (loop (usocket:with-connected-socket (server-connection (usocket:socket-accept server-socket))
-        (with-open-stream (stream (usocket:socket-stream server-connection))
-          ; Request and response objects are created here
-          (let ((req (make-request  stream))
-                (res (make-response stream)))
-            (handler-case (apply app `(,req ,res))
-              ; handle 4xx errors
-              (client-error (err) (render-error err res))
-              ; handle 5xx errors
-              (server-error (err) (render-error err res)))))))
+          (format nil "A project called ~A already exists!" name))))
 
-      ; cleanup form
-      (format t "Server shut down!~%")
-      (usocket:socket-close server-socket))))
+(defun build-path (name)
+  (let ((src (format nil "~{~A~^/~}" (append (cdr (reverse (cdr (reverse (pathname-directory (asdf:system-source-directory :barghest)))))) `(,name)))))
+    (make-pathname :directory `(:absolute ,src))))
 
-(defun hello-world (req res)
-  (format t "Hello-World: ~A -> ~A~%" (datetime-now) req)
+(defun write-asd-file (location name)
+  (let ((asd-file (merge-pathnames (make-pathname :name name :type "asd") location)))
+    (with-open-file (file asd-file :direction :output :if-does-not-exist :create)
+      (format file "(defsystem \"~A\"~%" name)
+      (format file "  :version \"0.1.0\"~%")
+      (format file "  :author \"~A\"~%" (uiop:getenv "USER"))
+      (format file "  :license \"\"~%")
+      (format file "  :depends-on (:barghest)~%")
+      (format file "  :components ((:module \"src\"~%")
+      (format file "                :components~%")
+      (format file "                  ((:module \"~A\"~%" name)
+      (format file "                    :components~%")
+      (format file "                      ((:file \"views\")~%")
+      (format file "                       (:file \"routes\")~%")
+      (format file "                       (:module \"settings\"~%")
+      (format file "                        :components~%")
+      (format file "                          ((:file \"local\")))))~%")
+      (format file "                    (:file \"manage\"))))~%")
+      (format file "  :description \"\"~%")
+      (format file "  :in-order-to ((test-op (test-op \"~A/tests\"))))~%" name)
+      (format file "~%")
+      (format file "(defsystem \"~A/tests\"~%" name)
+      (format file "  :version \"0.1.0\"~%")
+      (format file "  :author \"~A\"~%" (uiop:getenv "USER"))
+      (format file "  :license \"\"~%")
+      (format file "  :depends-on (\"~A\"~%" name)
+      (format file "               \"rove\")~%")
+      (format file "  :components ((:module \"tests\"~%")
+      (format file "                :components~%")
+      (format file "                ((:file \"manage\"))))~%")
+      (format file "  :description \"Test system for ~A\"~%" name)
+      (format file "  :perform (test-op (op c) (symbol-call :rove :run c)))"))))
 
-  (cond
-    ((equal (barghest.request:path req) "greeting")
-     (render res (djula:render-template* (djula:compile-template* "greeting.html") nil :name (gethash "name" (barghest.request:args req)))))
+(defun write-readme (location name)
+  (let ((asd-file (merge-pathnames (make-pathname :name "README" :type "md") location)))
+    (with-open-file (file asd-file :direction :output :if-does-not-exist :create)
+      (format file "# ~A~%" name))))
 
-    ((equal (barghest.request:path req) "post")
-     (render res (djula:render-template* (djula:compile-template* "post.html"))))
+(defun build-settings (location name)
+  (multiple-value-bind (location created)
+      (ensure-directories-exist (merge-pathnames (make-pathname :directory `(:relative "settings")) location))
 
-    ((equal (barghest.request:path req) "post-file")
-     (render res (djula:render-template* (djula:compile-template* "post-file.html"))))
+    (when created
+      (let ((settings-file (merge-pathnames (make-pathname :name "local" :type "lisp") location)))
+        (with-open-file (file settings-file :direction :output :if-does-not-exist :create)
+          (format file "(defpackage ~A/settings/local~%" name)
+          (format file "  (:use :cl)~%")
+          (format file "  (:export #:settings))~%")
+          (format file "(in-package :~A/settings/local)~%" name)
+          (format file "~%")
+          (format file "(defparameter settings '(:debug t~%")
+          (format file "                         :secret-key \"~A\"~%" (barghest/crypt:generate-secret-key))
+          (format file "                         :installed-apps (:admin~%")
+          (format file "                                          :~A)))~%" name))))))
 
-    ((equal (barghest.request:path req) "")
-     (render res (djula:render-template* (djula:compile-template* "index.html"))))
+(defun write-views-file (location name)
+  (let ((views-file (merge-pathnames (make-pathname :name "views" :type "lisp") location)))
+    (with-open-file (file views-file :direction :output :if-does-not-exist :create)
+      (format file "(defpackage ~A/views~%" name)
+      (format file "  (:use :cl)~%")
+      (format file "  (:export #:index))~%")
+      (format file "(in-package :~A/views)~%" name)
+      (format file "~%")
+      (format file "(defun index (request)~%")
+      (format file "  '(200 (:content-type \"text/plain\") (\"Hello, World\")))"))))
 
-    (t (error 'client-error :err-code :404))))
+(defun write-routes-file (location name)
+  (let ((routes-file (merge-pathnames (make-pathname :name "routes" :type "lisp") location)))
+    (with-open-file (file routes-file :direction :output :if-does-not-exist :create)
+      (format file "(defpackage ~A/routes~%" name)
+      (format file "  (:use :cl)~%")
+      (format file "  (:import-from :~A/views :index)~%" name)
+      (format file "  (:export #:urls))~%" name)
+      (format file "(in-package :~A/routes)~%" name)
+      (format file "~%")
+      (format file "(defparameter urls `(,(barghest/urls:make-path \"/\" #'index :name \"index\")))~%" name))))
+
+(defun write-models-file (location)
+  (let ((views-file (merge-pathnames (make-pathname :name "models" :type "lisp") location)))
+    (with-open-file (file views-file :direction :output :if-does-not-exist :create)
+      (format file "Hello world!~%"))))
+
+(defun write-manage-file (location name)
+  (let ((views-file (merge-pathnames (make-pathname :name "manage" :type "lisp") (merge-pathnames (make-pathname :directory `(:relative "src")) location))))
+    (with-open-file (file views-file :direction :output :if-does-not-exist :create)
+      (format file "(defpackage ~A~%" name)
+      (format file "  (:use :cl)~%")
+      (format file "  (:import-from :~A/routes :urls)~%" name)
+      (format file "  (:export #:start-server~%")
+      (format file "           #:stop-server~%")
+      (format file "           #:start-app~%")
+      (format file "           #:make-migrations~%")
+      (format file "           #:migrate))~%")
+      (format file "(in-package :~A)~%" name)
+      (format file "~%")
+      (format file "(defun start-app (name)~%")
+      (format file "  (format nil \"Creating app '~~A'\" name))~%")
+      (format file "~%")
+      (format file "(defun start-server ()~%")
+      (format file "  (clack:clackup (lambda (request) (barghest/urls:dispatcher urls request)) :server :woo :use-default-middlewares nil))~%")
+      (format file "~%")
+      (format file "(defun stop-server (app)~%")
+      (format file "  (clack:stop app))~%")
+      (format file "~%")
+      (format file "(defun make-migrations (name)~%")
+      (format file "  (format nil \"Making migrations for ~~A~~%\" name))~%")
+      (format file "~%")
+      (format file "(defun migrate (name)~%")
+      (format file "  (format nil \"Migrating for ~~A\" name))~%")
+      (format file "~%"))))
+
+(defun build-admin-app (location name)
+  (multiple-value-bind (root-app created)
+      (ensure-directories-exist (merge-pathnames (merge-pathnames (make-pathname :directory `(:relative ,name)) (make-pathname :directory `(:relative "src"))) location))
+
+    (when created
+      (build-settings root-app name)
+
+     (write-manage-file location name)
+     (write-routes-file root-app name)
+     (write-views-file root-app name))))
+
+;; debug code to quickly start a project
+;(start-project "my-project3")
+;(start-project "myproject")
+
+;; debug code to quickly remove a project
+;(let ((path (build-path "myproject")))
+;  (uiop:delete-directory-tree (ensure-directories-exist path) :validate (ensure-directories-exist path)))
+
+;(start-app "my-project" "polls")
