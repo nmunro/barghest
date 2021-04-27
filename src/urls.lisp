@@ -30,7 +30,7 @@
   (make-instance 'path :url url :callback callback :name name))
 
 (defun dispatcher (urls request)
-  (let ((view (find (getf request :path-info) urls :test #'(lambda (needle item) (string= needle (url item))))))
+  (let ((view (find (getf request :request-uri) urls :test #'(lambda (needle item) (string= needle (url item))))))
     (if (null view)
       (barghest/views:client-error-404 request)
       (handler-case (apply (callback view) `(,request))
