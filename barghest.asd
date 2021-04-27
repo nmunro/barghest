@@ -1,21 +1,19 @@
 (defsystem "barghest"
   :version "0.1.0"
-  :author ""
+  :author "NMunro"
   :license ""
-  :depends-on (:usocket
-               :djula)
+  :depends-on (:woo
+               :clack)
   :components ((:module "src"
                 :components
-                ((:file "datetime")
-                 (:file "http")
-                 (:file "request")
-                 (:file "response")
+                ((:file "views")
+                 (:file "crypt")
+                 (:file "urls")
                  (:file "main"))))
-  :description ""
-  :in-order-to ((test-op (test-op "barghest/tests"))))
+  :description "")
 
 (defsystem "barghest/tests"
-  :author ""
+  :author "NMunro"
   :license ""
   :depends-on ("barghest"
                "rove")
