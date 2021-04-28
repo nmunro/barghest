@@ -1,0 +1,24 @@
+(defpackage {{ name }}
+  (:use :cl)
+  (:import-from :{{ name }}/routes :urls)
+  (:export #:start-server
+           #:stop-server
+           #:start-app
+           #:make-migrations
+           #:migrate))
+(in-package :{{ name }})
+
+(defun start-app (name)
+  (format nil "Creating app '~A'~%" name))
+
+(defun start-server ()
+  (clack:clackup (lambda (request) (barghest/urls:dispatcher urls request)) :server :woo :use-default-middlewares nil))
+
+(defun stop-server (app)
+  (clack:stop app))
+
+(defun make-migrations (name)
+  (format nil "Making migrations for ~A~%" name))
+
+(defun migrate (name)
+  (format nil "Migrating for ~A~%" name))

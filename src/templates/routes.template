@@ -1,0 +1,7 @@
+(defpackage {{ name }}/routes
+  (:use :cl)
+  (:import-from :{{ name }}/views :index)
+  (:export #:urls))
+(in-package :{{ name }}/routes)
+
+(defparameter urls `(,(barghest/urls:make-path "/" #'index :name "index")))

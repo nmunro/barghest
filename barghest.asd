@@ -3,7 +3,8 @@
   :author "NMunro"
   :license ""
   :depends-on (:woo
-               :clack)
+               :clack
+               :djula)
   :components ((:module "src"
                 :components
                 ((:file "status")
