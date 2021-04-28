@@ -1,0 +1,27 @@
+(defsystem "{{ name }}"
+  :version "0.1.0"
+  :author "{{ author }}"
+  :license ""
+  :depends-on (:barghest)
+  :components ((:module "src"
+                :components
+                  ((:module "{{ name }}"
+                    :components
+                      ((:file "views")
+                       (:file "routes")
+                       (:file "settings")))
+                    (:file "manage"))))
+  :description ""
+  :in-order-to ((test-op (test-op "{{ name }}/tests"))))
+
+(defsystem "~A/tests"
+  :version "0.1.0"
+  :author "{{ author }}"
+  :license ""
+  :depends-on ("{{ name }}"
+               "rove")
+  :components ((:module "tests"
+                :components
+                ((:file "manage"))))
+  :description "Test system for {{ name }}"
+  :perform (test-op (op c) (symbol-call :rove :run c)))

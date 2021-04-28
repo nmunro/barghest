@@ -1,0 +1,9 @@
+(defpackage ~A/settings
+  (:use :cl)
+  (:export #:settings))
+(in-package :~A/settings)
+
+(defparameter settings '(:debug t
+                         :secret-key "~A"
+                         :installed-apps (:admin
+                                          :~A)))
