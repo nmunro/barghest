@@ -1,6 +1,7 @@
 (defpackage barghest/status
   (:use :cl)
   (:export #:code
+           #:codes
            #:description
            #:make-status))
 (in-package :barghest/status)
