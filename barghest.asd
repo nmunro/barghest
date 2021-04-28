@@ -6,7 +6,9 @@
                :clack)
   :components ((:module "src"
                 :components
-                ((:file "views")
+                ((:file "status")
+                 (:file "http")
+                 (:file "views")
                  (:file "crypt")
                  (:file "urls")
                  (:file "main"))))
