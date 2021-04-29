@@ -4,4 +4,4 @@
 (in-package :{{ name }}/views)
 
 (defun index (request)
-  (barghest/http:render (barghest/http:make-response "Hello, World!")))
+  (barghest/http:render (barghest/http:make-response "Hello, {{ name }}!")))
