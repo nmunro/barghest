@@ -14,8 +14,10 @@
 (defun start-server ()
   (clack:clackup (lambda (request) (barghest/urls:dispatcher urls request)) :server :woo :use-default-middlewares nil))
 
-(defun stop-server (app)
-  (clack:stop app))
+(defmacro start-server ()
+  (let ((app (clack:clackup (lambda (request) (barghest/urls:dispatcher urls request)) :server :woo :use-default-middlewares nil)))
+    `(defun stop-server ()
+        (clack:stop ,app))))
 
 (defun make-migrations (name)
   (format nil "Making migrations for ~A~%" name))
