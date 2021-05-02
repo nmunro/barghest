@@ -13,17 +13,17 @@
       (return-from start-project (format nil "A project called '~A' already exists!~%" name)))
 
     (let ((root-path (build-path name :root)))
-      (write-file "asd" "asd"   root-path `(:name ,name :author ,(uiop:getenv "USER")))
-      (write-file "README" "md" root-path `(:name ,name :author ,(uiop:getenv "USER")))
+      (write-file "asd"    "asd" root-path :name name :author (uiop:getenv "USER"))
+      (write-file "README" "md"  root-path :name name :author (uiop:getenv "USER"))
       (rename-file (merge-pathnames (make-pathname :name "asd" :type "asd") root-path) (merge-pathnames (make-pathname :name name :type "asd") root-path)))
 
     (let ((src-path (build-path name :src)))
-      (write-file "manage" "lisp" src-path `(:name ,name)))
+      (write-file "manage" "lisp" src-path :name name))
 
     (let ((admin-path (build-path name :admin)))
-      (write-file "settings" "lisp" admin-path `(:name ,name))
-      (write-file "routes"   "lisp" admin-path `(:name ,name))
-      (write-file "views"    "lisp" admin-path `(:name ,name)))
+      (write-file "settings" "lisp" admin-path :name name)
+      (write-file "routes"   "lisp" admin-path :name name)
+      (write-file "views"    "lisp" admin-path :name name))
 
     (format nil "Starting project '~A' in ~A" name root)))
 
@@ -47,7 +47,7 @@
       ((eq location :admin)
        (build-admin name)))))
 
-(defun write-file (name type location &optional vars)
+(defun write-file (name type location &rest vars &key &allow-other-keys)
   (let ((template (djula:compile-template* (format nil "~A.template" name)))
         (file (merge-pathnames (make-pathname :name name :type type) location)))
      (with-open-file (out file :direction :output :if-does-not-exist :create)
