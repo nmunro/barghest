@@ -19,7 +19,6 @@
   (format t "Creating app '~A'~%" name)
   (ensure-directories-exist (asdf:system-relative-pathname "{{ name }}" (format nil "src/~A/" name)))
 
-  ; Now start coping the app template files
   (let ((app-path (asdf:system-relative-pathname "{{ name }}" (format nil "src/~A/" name))))
     (write-file "routes" "lisp" app-path :name name)
     (write-file "views"  "lisp" app-path :name name)))
