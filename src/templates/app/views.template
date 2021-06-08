@@ -1,0 +1,7 @@
+(defpackage {{ name }}/views
+  (:use :cl)
+  (:export #:index))
+(in-package :{{ name }}/views)
+
+(defun index (request)
+  (barghest/http:render (barghest/http:make-response "Hello, {{ name }}!")))
