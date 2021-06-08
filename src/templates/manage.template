@@ -8,8 +8,21 @@
            #:migrate))
 (in-package :{{ name }})
 
+(defun write-file (name type location &rest vars &key &allow-other-keys)
+  (let ((template (djula:compile-template* (format nil "~A.template" name)))
+        (file (merge-pathnames (make-pathname :name name :type type) location)))
+     (with-open-file (out file :direction :output :if-does-not-exist :create)
+       (apply #'djula:render-template* (append `(,template ,out) vars)))))
+
 (defun start-app (name)
-  (format nil "Creating app '~A'~%" name))
+  (djula:add-template-directory (asdf:system-relative-pathname "barghest" "src/templates/app/"))
+  (format t "Creating app '~A'~%" name)
+  (ensure-directories-exist (asdf:system-relative-pathname "{{ name }}" (format nil "src/~A/" name)))
+
+  ; Now start coping the app template files
+  (let ((app-path (asdf:system-relative-pathname "{{ name }}" (format nil "src/~A/" name))))
+    (write-file "routes" "lisp" app-path :name name)
+    (write-file "views"  "lisp" app-path :name name)))
 
 (defun start-server ()
   (clack:clackup (lambda (request) (barghest/urls:dispatcher urls request)) :server :woo :use-default-middlewares nil))
