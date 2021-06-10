@@ -14,7 +14,7 @@
   :description ""
   :in-order-to ((test-op (test-op "{{ name }}/tests"))))
 
-(defsystem "~A/tests"
+(defsystem "{{ name }}/tests"
   :version "0.1.0"
   :author "{{ author }}"
   :license ""
