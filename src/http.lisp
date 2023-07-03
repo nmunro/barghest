@@ -11,4 +11,4 @@
 
 (defun redirect (url)
   (setf (lack.response:response-headers ningle:*response*) (append (lack.response:response-headers ningle:*response*) (list "Location" url)))
-  (setf (lack.response:response-status ningle:*response*) 303))
+  (setf (lack.response:response-status ningle:*response*) "303"))
