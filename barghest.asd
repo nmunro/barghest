@@ -9,7 +9,8 @@
                :cerberus)
   :components ((:module "src"
                 :components
-                ((:file "http")
+                ((:file "utils")
+                 (:file "http")
                  (:file "crypt")
                  (:file "router")
                  (:file "controllers"))))
