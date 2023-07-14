@@ -13,7 +13,14 @@
                  (:file "http")
                  (:file "crypt")
                  (:file "router")
-                 (:file "controllers"))))
+                 (:file "controllers")
+                 (:module "admin"
+                  :components
+                  ((:file "models")
+                   (:file "controllers")
+                   (:file "views")
+                   (:file "urls")
+                   (:file "auth"))))))
   :description "Generate a skeleton for modern project"
   :in-order-to ((test-op (test-op "barghest/tests"))))
 
