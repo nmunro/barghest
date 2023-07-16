@@ -8,7 +8,11 @@
   </div>
 </div>
 
-<form class="row g-3" action="/admin/login" method="POST">
+{% if next-url %}
+  <form class="row g-3" action="/admin/login?next={{ next-url }}" method="POST">
+{% else %}
+  <form class="row g-3" action="/admin/login" method="POST">
+{% endif %}
   <div class="col-md-6">
     <label for="username" class="form-label">User:</label>
     <input type="text" class="form-control" id="username" name="username">
