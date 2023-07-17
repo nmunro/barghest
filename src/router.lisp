@@ -15,7 +15,7 @@
 (defun path (url callback &key (method :GET) (name ""))
   (list :url url :view callback :method method :name name))
 
-(defun mount (app prefix urls)
+(defun mount (app urls &key (prefix ""))
   (dolist (url urls)
     (let ((route (defroute app (format nil "~A~A" prefix (getf url :url)) (getf url :view) :method (getf url :method))))
       (when (string/= (getf url :name) "")
