@@ -33,14 +33,23 @@
 (defun login (params)
   (let ((username (cdr (assoc "username" params :test #'equal)))
         (password (cdr (assoc "password" params :test #'equal))))
+    (format t "NEXT: ~A~%" (barghest/http:get-next-url))
     (handler-case (cerberus:login :user username :password password)
         (cerberus:invalid-user (err)
-            (return-from login (barghest/http:render "admin/login.html" :msg (cerberus:msg err))))
+            (return-from login (barghest/http:render
+                                "admin/login.html"
+                                :msg (cerberus:msg err)
+                                :next-url (barghest/http:get-next-url))))
 
         (cerberus:invalid-password (err)
-            (return-from login (barghest/http:render "admin/login.html" :msg (cerberus:msg err))))))
+            (return-from login (barghest/http:render
+                                "admin/login.html"
+                                :msg (cerberus:msg err)
+                                :next-url (barghest/http:get-next-url))))))
 
-  (barghest/http:redirect "/admin/"))
+  (alexandria:if-let (next-url (cdr (assoc "next" params :test #'equal)))
+      (barghest/http:redirect (barghest/http:get-next-url))
+      (barghest/http:redirect "/admin/")))
 
 (defun logout (params)
   (when (cerberus:user-name)
@@ -53,7 +62,7 @@
   (declare (ignore params))
   (if (cerberus:auth "admin")
     (barghest/http:render "admin/admin.html" :msg "barghest Admin")
-    (barghest/http:render "admin/login.html" :msg "barghest Admin")))
+    (barghest/http:render "admin/login.html" :msg "barghest Admin" :next-url (barghest/http:get-next-url))))
 
 (defgeneric create-object (object kws)
   (:documentation "Create an object"))
@@ -143,7 +152,7 @@
 
 (defun get (params)
   (unless (cerberus:auth "admin")
-    (return-from get (barghest/http:redirect "/admin/")))
+    (return-from get (barghest/http:redirect "/admin/" :return-url t)))
 
   (cond
     ((and (equalp (cdr (assoc :object params :test #'equal)) "user") (cdr (assoc :id params :test #'equal)))
