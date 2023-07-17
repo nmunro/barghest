@@ -20,7 +20,8 @@
                    (:file "controllers")
                    (:file "views")
                    (:file "urls")
-                   (:file "auth"))))))
+                   (:file "auth")))
+                 (:file "auth"))))
   :description "Generate a skeleton for modern project"
   :in-order-to ((test-op (test-op "barghest/tests"))))
 
