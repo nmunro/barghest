@@ -12,6 +12,7 @@
 
 (mito:deftable user ()
   ((name     :col-type (:varchar 255))
+   (email    :col-type (:varchar 255))
    (password :col-type (or (:varchar 512) :null)))
   (:unique-keys name))
 
