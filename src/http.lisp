@@ -18,9 +18,15 @@
 
 (defun auth-required (fn &key permissions)
   (lambda (params)
-    (if (cerberus:auth permissions)
-      (funcall fn params)
-      (redirect "/admin/login" :next-url (get-current-url)))))
+    (cond
+      ((and (cerberus:logged-in-p) (cerberus:auth permissions))
+        (funcall fn params))
+
+      ((cerberus:logged-in-p)
+       (not-allowed "405.html" :msg "Not Allowed"))
+
+      (t
+       (redirect "/admin/login" :next-url (get-current-url))))))
 
 (defun redirect (url &key next-url return-url)
   (cond
