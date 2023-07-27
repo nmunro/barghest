@@ -15,6 +15,7 @@
 
 (in-package barghest/admin/views)
 
+(djula:add-template-directory (asdf:system-relative-pathname "barghest" "src/templates/"))
 (djula:add-template-directory (asdf:system-relative-pathname "barghest" "src/admin/templates/"))
 
 (defun load-controller (name)
@@ -40,28 +41,32 @@
                                 :msg (cerberus:msg err)
                                 :next-url (barghest/http:get-next-url))))
 
-        (cerberus:invalid-password (err)
+          (cerberus:invalid-password (err)
             (return-from login (barghest/http:render
                                 "admin/login.html"
                                 :msg (cerberus:msg err)
                                 :next-url (barghest/http:get-next-url))))))
 
-  (alexandria:if-let (next-url (cdr (assoc "next" params :test #'equal)))
-      (barghest/http:redirect (barghest/http:get-next-url))
-      (barghest/http:redirect "/admin/")))
+      (alexandria:if-let (next-url (cdr (assoc "next" params :test #'equal)))
+        (return-from login (barghest/http:redirect (barghest/http:get-next-url)))
+        (return-from login (barghest/http:redirect "/"))))
+
+    (t
+     (return-from login (barghest/http:not-allowed "405.html")))))
 
 (defun logout (params)
   (when (cerberus:user-name)
-    (cerberus:logout)
-    (return-from logout (barghest/http:redirect "/")))
-
-  (barghest/http:redirect "/profile"))
+    (cerberus:logout))
+  (barghest/http:redirect "/"))
 
 (defun admin (params)
   (declare (ignore params))
-  (if (cerberus:auth "admin")
-    (barghest/http:render "admin/admin.html" :msg "barghest Admin")
-    (barghest/http:render "admin/login.html" :msg "barghest Admin" :next-url (barghest/http:get-next-url))))
+  (cond
+    ((cerberus:auth "admin")
+      (return-from admin (barghest/http:render "admin/admin.html" :msg "Barghest Admin")))
+
+    (t
+     (return-from admin (barghest/http:redirect (barghest/http:get-next-url))))))
 
 (defgeneric create-object (object kws)
   (:documentation "Create an object"))
