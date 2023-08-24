@@ -137,7 +137,7 @@
 (defun process-object (action object fields)
   (let ((controller (load-controller object))
         (id (cdr (assoc :id fields :test #'equal)))
-        (kws (barghest/utils:alist-to-plist (remove (assoc :id fields :test #'equalp) fields :test #'equal))))
+        (kws (barghest/utils/tron:alist-to-plist (remove (assoc :id fields :test #'equalp) fields :test #'equal))))
     (cond
       ((equalp action "create")
          (return-from process-object (create-object (intern (string-upcase object) "KEYWORD") kws)))
