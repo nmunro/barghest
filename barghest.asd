@@ -9,7 +9,6 @@
                :clop
                :cl-fad
                :ppath
-               :pathname-utils
                :cerberus)
   :components ((:module "src"
                 :components
