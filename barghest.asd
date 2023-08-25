@@ -9,6 +9,7 @@
                :clop
                :cl-fad
                :ppath
+               :envy
                :cerberus)
   :components ((:module "src"
                 :components
