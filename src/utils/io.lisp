@@ -5,12 +5,6 @@
 
 (in-package barghest/utils/io)
 
-;; (defun is-directory (file)
-;;   (not (pathname-name file)))
-
-;; (defun is-file (file)
-;;   (pathname-name file))
-
 (defun list-files (path)
   (let ((files))
     (unless (probe-file path)

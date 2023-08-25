@@ -34,7 +34,9 @@
          (content-type (barghest/utils/io:guess-mime-type (gethash mount files))))
     (setf (lack.response:response-headers ningle:*response*)
       (append (lack.response:response-headers ningle:*response*) (list :content-type content-type)))
-    (uiop:read-file-string (gethash mount files))))
+    (if (str:starts-with-p "text/" content-type)
+        (alexandria:read-file-into-string (gethash mount files))
+        (alexandria:read-file-into-byte-vector (gethash mount files)))))
 
 (defun prepare-static-routes (project app prefix)
   (dolist (static-file-data (generate-static-urls project app))

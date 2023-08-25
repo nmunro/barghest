@@ -10,6 +10,7 @@
                :cl-fad
                :ppath
                :envy
+               :str
                :cerberus)
   :components ((:module "src"
                 :components
