@@ -14,11 +14,11 @@
                :cerberus)
   :components ((:module "src"
                 :components
-                ((:file "router")
-                 (:module "utils"
+                ((:module "utils"
                   :components
                   ((:file "io")
                    (:file "tron")))
+                 (:file "router")
                  (:module "static"
                   :components
                   ((:file "main")))
