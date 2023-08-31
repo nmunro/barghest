@@ -19,6 +19,7 @@
                   ((:file "io")
                    (:file "tron")))
                  (:file "router")
+                 (:file "models")
                  (:module "static"
                   :components
                   ((:file "main")))
@@ -26,7 +27,6 @@
                  (:file "http")
                  (:file "crypt")
                  (:file "controllers")
-                 (:file "app")
                  (:module "admin"
                   :components
                   ((:file "models")

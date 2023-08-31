@@ -14,12 +14,12 @@
     (barghest/controllers:get +user+ :name user))
 
 (defun user-pass (user)
-    (slot-value (barghest/controllers:get +user+ :name user) 'barghest/admin/models:password))
+    (slot-value (barghest/controllers:get +user+ :name user) 'barghest/admin/models::password))
 
 (defun user-roles (user)
     (loop :for role
           :in (barghest/admin/controllers:search +permissions+ :player (barghest/controllers:get +user+ :name user))
-          :collect (slot-value (slot-value role 'barghest/admin/models:role) 'barghest/admin/models:name)))
+          :collect (slot-value (slot-value role 'barghest/admin/models:role) 'barghest/admin/models::name)))
 
 (defun user-csrf-token (user)
   (let ((s (format nil "~A~A" user (get-universal-time))))

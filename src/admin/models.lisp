@@ -2,11 +2,7 @@
   (:use :cl)
   (:export #:user
            #:role
-           #:permissions
-           #:user-id
-           #:id
-           #:name
-           #:password))
+           #:permissions))
 
 (in-package barghest/admin/models)
 

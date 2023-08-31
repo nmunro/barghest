@@ -8,7 +8,7 @@
 (defun set-password (username password)
   (let ((password-hash (cl-pass:hash password :type :pbkdf2-sha256 :iterations 10000))
         (user (barghest/controllers:get barghest/admin/controllers:+user+ :name username)))
-    (setf (slot-value user 'barghest/admin/models:password) password-hash)
+    (setf (slot-value user 'barghest/admin/models::password) password-hash)
     (mito:save-dao user)))
 
 (defun create-user (&key (username nil username-p) (email nil email-p))
