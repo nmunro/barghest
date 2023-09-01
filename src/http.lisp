@@ -50,4 +50,4 @@
   (render template :msg msg))
 
 (defun get-next-url ()
-  (format nil "~A" (cdr (assoc "next" (lack.request:request-query-parameters ningle:*request*) :test #'equal))))
+  (format nil "~A" (or (cdr (assoc "next" (lack.request:request-query-parameters ningle:*request*) :test #'equal)) "")))

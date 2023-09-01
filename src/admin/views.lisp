@@ -33,7 +33,6 @@
 (defun login (params)
   (let ((username (cdr (assoc "username" params :test #'equal)))
         (password (cdr (assoc "password" params :test #'equal))))
-    (format t "NEXT: ~A~%" (barghest/http:get-next-url))
     (handler-case (cerberus:login :user username :password password)
         (cerberus:invalid-user (err)
             (return-from login (barghest/http:render
