@@ -5,59 +5,9 @@
 (in-package barghest/admin/urls)
 
 (defparameter patterns (list
-  (barghest/routes:path "" #'barghest/admin/views:admin :method :GET :name :admin-index)
-  (barghest/routes:path "login" #'barghest/admin/views:login :method :POST :name :login)
-  (barghest/routes:path "logout" #'barghest/admin/views:logout :method :GET :name :logout)
-  (barghest/routes:path ":object" #'barghest/admin/views:get :method :GET :name :list-objects)
-  (barghest/routes:path ":object" #'barghest/admin/views:save :method :POST :name :save-object)
-  (barghest/routes:path ":object/add" #'barghest/admin/views:add :method :GET :name :add-object)
-  (barghest/routes:path ":object/:id" #'barghest/admin/views:get :method :GET :name :get-object)
-  (barghest/routes:path ":object/:id" #'barghest/admin/views:save :method :POST :name :update-object)))
-
-  (barghest/routes:path
-   "/login"
-   #'barghest/admin/views:login
-   :method :GET
-   :name :login)
-
-  (barghest/routes:path
-   "/login"
-   #'barghest/admin/views:login
-   :method :POST
-   :name :login)
-
-  (barghest/routes:path
-   "/logout"
-   (barghest/http:auth-required #'barghest/admin/views:logout)
-   :method :GET
-   :name :logout)
-
-  (barghest/routes:path
-   "/:object"
-   (barghest/http:auth-required #'barghest/admin/views:get :permissions "admin")
-   :method :GET
-   :name :list-objects)
-
-  (barghest/routes:path
-   "/:object"
-   (barghest/http:auth-required #'barghest/admin/views:save :permissions "admin")
-   :method :POST
-   :name :save-object)
-
-  (barghest/routes:path
-   "/:object/add"
-   (barghest/http:auth-required #'barghest/admin/views:add :permissions "admin")
-   :method :GET
-   :name :add-object)
-
-  (barghest/routes:path
-   "/:object/:id"
-   (barghest/http:auth-required #'barghest/admin/views:get :permissions "admin")
-   :method :GET
-   :name :get-object)
-
-  (barghest/routes:path
-   "/:object/:id"
-   (barghest/http:auth-required #'barghest/admin/views:save :permissions "admin")
-   :method :POST
-   :name :update-object)))
+  (barghest/routes:path "/" #'barghest/admin/views:admin :method :GET :name :admin-index)
+  (barghest/routes:path ":object/" #'barghest/admin/views:get :method :GET :name :list-objects)
+  (barghest/routes:path ":object/" #'barghest/admin/views:save :method :POST :name :save-object)
+  (barghest/routes:path ":object/add/" #'barghest/admin/views:add :method :GET :name :add-object)
+  (barghest/routes:path ":object/:id/" #'barghest/admin/views:get :method :GET :name :get-object)
+  (barghest/routes:path ":object/:id/" #'barghest/admin/views:save :method :POST :name :update-object)))

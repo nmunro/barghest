@@ -1,7 +1,7 @@
 (defpackage barghest/admin/views
   (:use :cl)
   (:shadow #:get)
-  (:import-from :barghest/admin/controllers
+  (:import-from :barghest/auth/controllers
                 :+user+
                 :+role+
                 :+permissions+)
@@ -14,9 +14,6 @@
            #:logout))
 
 (in-package barghest/admin/views)
-
-(djula:add-template-directory (asdf:system-relative-pathname "barghest" "src/templates/"))
-(djula:add-template-directory (asdf:system-relative-pathname "barghest" "src/admin/templates/"))
 
 (defun load-controller (name)
   (let ((model (find-class (read-from-string (format nil "barghest/admin/models:~A" name))))
@@ -49,10 +46,7 @@
 
       (alexandria:if-let (next-url (cdr (assoc "next" params :test #'equal)))
         (return-from login (barghest/http:redirect (barghest/http:get-next-url)))
-        (return-from login (barghest/http:redirect "/"))))
-
-    (t
-     (return-from login (barghest/http:not-allowed "405.html")))))
+        (return-from login (barghest/http:redirect "/admin/"))))
 
 (defun logout (params)
   (when (cerberus:user-name)
@@ -66,7 +60,7 @@
       (return-from admin (barghest/http:render "admin/admin.html" :msg "Barghest Admin")))
 
     (t
-     (return-from admin (barghest/http:redirect (barghest/http:get-next-url))))))
+     (return-from admin (barghest/http:render "admin/login.html")))))
 
 (defgeneric create-object (object kws)
   (:documentation "Create an object"))
@@ -89,7 +83,7 @@
 (defmethod get-object ((object (eql :user)) id)
   (flet ((get-role (role) `(:role ,role :selected ,(cerberus:auth (slot-value role 'barghest/admin/models::name)))))
     (let* ((user (barghest/controllers:get (load-controller "user") :id id))
-           (permissions (barghest/admin/controllers:user-permissions (load-controller "permissions") user)))
+           (permissions (barghest/auth/controllers:user-permissions (load-controller "permissions") user)))
         (barghest/http:render
             "admin/user/item.html"
             :item user
@@ -118,7 +112,7 @@
   (mito:save-dao obj)
   (setf kws (remove :permission kws))
 
-  (dolist (perm (barghest/admin/controllers:user-permissions (load-controller "permissions") obj))
+  (dolist (perm (barghest/auth/controllers:user-permissions (load-controller "permissions") obj))
     (barghest/controllers:delete (load-controller "permissions") :id (mito:object-id perm)))
 
   (dolist (kw kws)

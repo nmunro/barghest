@@ -27,15 +27,20 @@
                  (:file "http")
                  (:file "crypt")
                  (:file "controllers")
+                 (:module "auth"
+                  :components
+                  ((:file "models")
+                   (:file "controllers")
+                   (:file "views")
+                   (:file "urls")
+                   (:file "main")))
                  (:module "admin"
                   :components
                   ((:file "models")
                    (:file "controllers")
                    (:file "views")
                    (:file "urls")
-                   (:file "auth")
-                   (:file "admin")))
-                 (:file "auth"))))
+                   (:file "admin"))))))
   :description "Generate a skeleton for modern project"
   :in-order-to ((test-op (test-op "barghest/tests"))))
 
