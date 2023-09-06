@@ -31,14 +31,14 @@
     user))
 
 (defun user-p (user)
-  (barghest/controllers:get +user+ :name user))
+  (barghest/controllers:get barghest/auth/controllers:+user+ :name user))
 
 (defun user-pass (user)
-  (slot-value (barghest/controllers:get +user+ :name user) 'barghest/auth/models::password))
+  (slot-value (barghest/controllers:get barghest/auth/controllers:+user+ :name user) 'barghest/auth/models::password))
 
 (defun user-roles (user)
   (loop :for role
-        :in (barghest/auth/controllers:search +permissions+ :player (barghest/controllers:get +user+ :name user))
+        :in (barghest/auth/controllers:search barghest/auth/controllers:+permissions+ :player (barghest/controllers:get barghest/auth/controllers:+user+ :name user))
         :collect (slot-value (slot-value role 'barghest/auth/models:role) 'barghest/auth/models::name)))
 
 (defun user-csrf-token (user)

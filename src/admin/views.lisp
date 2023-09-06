@@ -28,31 +28,6 @@
     (setf params (remove (assoc "csrf-token" params :test #'equalp) params :test #'equal))
     (setf params (remove (assoc :object params :test #'equal) params :test #'equal)))
 
-(defun login (params)
-  (let ((username (cdr (assoc "username" params :test #'equal)))
-        (password (cdr (assoc "password" params :test #'equal))))
-    (handler-case (cerberus:login :user username :password password)
-        (cerberus:invalid-user (err)
-            (return-from login (barghest/http:render
-                                "admin/login.html"
-                                :msg (cerberus:msg err)
-                                :next-url (barghest/http:get-next-url))))
-
-          (cerberus:invalid-password (err)
-            (return-from login (barghest/http:render
-                                "admin/login.html"
-                                :msg (cerberus:msg err)
-                                :next-url (barghest/http:get-next-url))))))
-
-      (alexandria:if-let (next-url (cdr (assoc "next" params :test #'equal)))
-        (return-from login (barghest/http:redirect (barghest/http:get-next-url)))
-        (return-from login (barghest/http:redirect "/admin/"))))
-
-(defun logout (params)
-  (when (cerberus:user-name)
-    (cerberus:logout))
-  (barghest/http:redirect "/"))
-
 (defun admin (params)
   (declare (ignore params))
   (cond
@@ -60,7 +35,7 @@
       (return-from admin (barghest/http:render "admin/admin.html" :msg "Barghest Admin")))
 
     (t
-     (return-from admin (barghest/http:render "admin/login.html")))))
+     (return-from admin (barghest/http:redirect "/auth/login/" :return-url t)))))
 
 (defgeneric create-object (object kws)
   (:documentation "Create an object"))

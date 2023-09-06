@@ -9,9 +9,9 @@
 </div>
 
 {% if next-url %}
-  <form class="row g-3" action="/admin/login?next={{ next-url }}" method="POST">
+  <form class="row g-3" action="/auth/login/?next={{ next-url }}" method="POST">
 {% else %}
-  <form class="row g-3" action="/admin/login" method="POST">
+  <form class="row g-3" action="/auth/login/" method="POST">
 {% endif %}
   <div class="col-md-6">
     <label for="username" class="form-label">User:</label>
@@ -27,4 +27,8 @@
     <button type="submit" class="btn btn-primary">Login</button>
   </div>
 </form>
+{% endblock %}
+
+{% block js %}
+  <script src="http://localhost:5001/static/admin/admin.js"></script>
 {% endblock %}
