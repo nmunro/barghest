@@ -46,12 +46,3 @@
 ;;                 ""))))
 ;;         (str:join "/" split-route)
 ;;         (lambda (stream) (format stream (str:join "/" split-route)))))
-
-(let ((a nil)
-      (b 2))
-  (cond
-    (a
-     "A is selected")
-
-    (b
-     "B is selected")))
