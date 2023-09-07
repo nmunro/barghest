@@ -2,6 +2,7 @@
   (:use :cl)
   (:export #:alist-to-plist
            #:split-into-pairs
+           #:string-to-keyword
            #:make-keyword
            #:get-project-path))
 
@@ -20,3 +21,6 @@
 
 (defun get-project-path (project &key (path ""))
   (asdf:system-relative-pathname project path))
+
+(defun string-to-keyword (s)
+  (format nil ":~A" (string-downcase s)))

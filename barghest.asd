@@ -27,6 +27,7 @@
                  (:file "http")
                  (:file "crypt")
                  (:file "controllers")
+                 (:file "tags")
                  (:module "auth"
                   :components
                   ((:file "models")
