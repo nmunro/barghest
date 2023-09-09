@@ -20,18 +20,18 @@
     <tbody>
         <tr>
             <th scope="row">
-                <a href="/admin/role">Roles</a>
+                <a href='{% url :list-objects "role" %}'>Roles</a>
             </th>
             <td>
-                <a href="/admin/role/add">&#x2795;&nbsp;Add</a>
+                <a href='{% url :add-object "role" %}'>&#x2795;&nbsp;Add</a>
             </td>
         </tr>
         <tr>
             <th scope="row">
-                <a href="/admin/user">Users</a>
+                <a href='{% url :list-objects "user" %}'>Users</a>
             </th>
             <td>
-                <a href="/admin/user/add">&#x2795;&nbsp;Add</a>
+                <a href='{% url :add-object "user" %}'>&#x2795;&nbsp;Add</a>
             </td>
         </tr>
     </tbody>

@@ -4,8 +4,8 @@
     <div class="col-md-12">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/admin/">Admin</a></li>
-          <li class="breadcrumb-item"><a href="/admin/role">Roles</a></li>
+          <li class="breadcrumb-item"><a href="{% url :admin-index %}">Admin</a></li>
+          <li class="breadcrumb-item"><a href='{% url :list-objects :object "role" %}'>Roles</a></li>
           <li class="breadcrumb-item active" aria-current="page">{{ item.name }}</li>
         </ol>
       </nav>
@@ -13,9 +13,9 @@
   </div>
 
 {% if item.id %}
-  <form method="POST" action="/admin/role/{{ item.id }}">
+  <form method="POST" action='{% url :update-object :object "role" :id item.id %}'>
 {% else %}
-  <form method="POST" action="/admin/role">
+  <form method="POST" action='{% url :save-object :object "role" %}'>
 {% endif %}
   <div class="form-group">
     {% if csrf-token %}

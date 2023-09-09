@@ -4,14 +4,14 @@
     <div class="col-md-12">
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="/admin/">Admin</a></li>
+          <li class="breadcrumb-item"><a href="{% url :admin-index %}">Admin</a></li>
           <li class="breadcrumb-item active" aria-current="page">Roles</li>
         </ol>
       </nav>
     </div>
   </div>
 
-  <form>
+  <form method="POST" action="/admin/role">
     <div class="row">
       <div class="col-md-2">
         <select class="form-control">
@@ -35,8 +35,9 @@
       <tbody>
         {% for item in items %}
           <tr>
-            <td><input type="checkbox" value={{ item.id }}></td>
-            <td><a href="/admin/role/{{ item.id }}">{{ item.name }}</a></td>
+            <td><input type="checkbox" value="{{ item.id }}" name="role"></td>
+            <td><a href="/admin/role/{{ item.id }}">{{ item.name }}</a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

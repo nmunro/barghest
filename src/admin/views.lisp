@@ -15,13 +15,13 @@
 
 (in-package barghest/admin/views)
 
-(defun load-controller (name)
-  (let ((model (find-class (read-from-string (format nil "barghest/admin/models:~A" name))))
-        (controller (find-class (read-from-string (format nil "barghest/admin/controllers::~A" name)))))
+(defun load-controller (name package)
+  (let ((model (find-class (read-from-string (format nil "barghest/~A/models:~A" package name))))
+        (controller (find-class (read-from-string (format nil "barghest/~A/controllers::~A" package name)))))
     (funcall #'make-instance controller :model model)))
 
-(defun load-slot (name)
-  (read-from-string (format nil "barghest/admin/models:~A" name)))
+(defun load-slot (name package)
+  (read-from-string (format nil "barghest/~A/models:~A" package name)))
 
 (defun clean-form (params)
     (setf params (remove (assoc "action" params :test #'equalp) params :test #'equal))
@@ -50,65 +50,65 @@
   (:documentation "Delete an object"))
 
 (defmethod create-object ((object (eql :user)) kws)
-  (apply #'barghest/controllers:create (append `(,(load-controller "user")) kws)))
+  (apply #'barghest/controllers:create (append `(,(load-controller "user" "auth")) kws)))
 
 (defmethod create-object ((object (eql :role)) kws)
-  (apply #'barghest/controllers:create (append `(,(load-controller "role")) kws)))
+  (apply #'barghest/controllers:create (append `(,(load-controller "role" "auth")) kws)))
 
 (defmethod get-object ((object (eql :user)) id)
   (flet ((get-role (role) `(:role ,role :selected ,(cerberus:auth (slot-value role 'barghest/admin/models::name)))))
-    (let* ((user (barghest/controllers:get (load-controller "user") :id id))
-           (permissions (barghest/auth/controllers:user-permissions (load-controller "permissions") user)))
+    (let* ((user (barghest/controllers:get (load-controller "user" "auth") :id id))
+           (permissions (barghest/auth/controllers:user-permissions (load-controller "permissions" "auth") user)))
         (barghest/http:render
-            "admin/user/item.html"
+            "admin/user.html"
             :item user
             :csrf-token (cerberus:csrf-token)
-            :roles (loop :for role :in (barghest/controllers:all (load-controller "role")) :collect (get-role role))))))
+            :roles (loop :for role :in (barghest/controllers:all (load-controller "role" "auth")) :collect (get-role role))))))
 
 (defmethod get-object ((object (eql :role)) id)
   (barghest/http:render
-    "admin/role/item.html"
-    :item (barghest/controllers:get (load-controller "role") :id id)
+    "admin/role.html"
+    :item (barghest/controllers:get (load-controller "role" "auth") :id id)
     :csrf-token (cerberus:csrf-token)))
 
 (defmethod get-object ((object (eql :users)) id)
   (declare (ignore id))
-  (barghest/http:render "admin/user/list.html" :items (barghest/controllers:all (load-controller "user"))))
+  (barghest/http:render "admin/list-user.html" :items (barghest/controllers:all (load-controller "user" "auth"))))
 
 (defmethod get-object ((object (eql :roles)) id)
   (declare (ignore id))
-  (barghest/http:render "admin/role/list.html" :items (barghest/controllers:all (load-controller "role"))))
+  (barghest/http:render "admin/list-role.html" :items (barghest/controllers:all (load-controller "role" "auth"))))
 
 (defmethod save-object ((object (eql :user)) obj kws)
   (dolist (kw (loop :for (k v) :on kws :by #'cddr :collect k))
     (unless (eq kw :permission)
-      (setf (slot-value obj (load-slot kw)) (getf kws kw))
+      (setf (slot-value obj (load-slot kw "auth")) (getf kws kw))
       (setf kws (cddr kws))))
   (mito:save-dao obj)
   (setf kws (remove :permission kws))
 
-  (dolist (perm (barghest/auth/controllers:user-permissions (load-controller "permissions") obj))
-    (barghest/controllers:delete (load-controller "permissions") :id (mito:object-id perm)))
+  (dolist (perm (barghest/auth/controllers:user-permissions (load-controller "permissions" "auth") obj))
+    (barghest/controllers:delete (load-controller "permissions" "auth") :id (mito:object-id perm)))
 
   (dolist (kw kws)
     (barghest/controllers:get-or-create
-     (load-controller "permissions")
+     (load-controller "permissions" "auth")
      :user obj
-     :role (barghest/controllers:get (load-controller "role") :name kw))))
+     :role (barghest/controllers:get (load-controller "role" "auth") :name kw))))
 
 (defmethod save-object ((object (eql :role)) obj kws)
   (dolist (kw (loop :for (k v) :on kws :by #'cddr :collect k))
-    (setf (slot-value obj (load-slot kw)) (getf kws kw)))
+    (setf (slot-value obj (load-slot kw "auth")) (getf kws kw)))
   (mito:save-dao obj))
 
 (defmethod delete-object ((object (eql :user)) obj)
-  (apply #'barghest/controllers:delete `(,(load-controller "user") :id ,(mito:object-id obj))))
+  (apply #'barghest/controllers:delete `(,(load-controller "user" "auth") :id ,(mito:object-id obj))))
 
 (defmethod delete-object ((object (eql :role)) obj)
-  (apply #'barghest/controllers:delete `(,(load-controller "role") :id ,(mito:object-id obj))))
+  (apply #'barghest/controllers:delete `(,(load-controller "role" "auth") :id ,(mito:object-id obj))))
 
 (defun process-object (action object fields)
-  (let ((controller (load-controller object))
+  (let ((controller (load-controller object "auth"))
         (id (cdr (assoc :id fields :test #'equal)))
         (kws (barghest/utils/tron:alist-to-plist (remove (assoc :id fields :test #'equalp) fields :test #'equal))))
     (cond
@@ -155,5 +155,4 @@
 
 (defun add (params)
   (let ((object (cdr (assoc :object params :test #'equal))))
-    (barghest/http:render (format nil "admin/~A/item.html" object) :csrf-token (cerberus:csrf-token))))
-
+    (barghest/http:render (format nil "admin/~A.html" object) :csrf-token (cerberus:csrf-token))))
