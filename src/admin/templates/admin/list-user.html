@@ -5,13 +5,13 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url :admin-index %}">Admin</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Roles</li>
+          <li class="breadcrumb-item active" aria-current="page">User</li>
         </ol>
       </nav>
     </div>
   </div>
 
-  <form method="POST" action="/admin/role">
+  <form method="POST" action='{% url :list-objects "user" %}'>
     <div class="row">
       <div class="col-md-2">
         <select class="form-control">
@@ -36,7 +36,7 @@
         {% for item in items %}
           <tr>
             <td><input type="checkbox" value="{{ item.id }}" name="role"></td>
-            <td><a href="/admin/role/{{ item.id }}">{{ item.name }}</a>
+            <td><a href='{% url :get-object "user" item.id %}'>{{ item.name }}</a>
             </td>
           </tr>
         {% endfor %}

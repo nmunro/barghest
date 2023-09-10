@@ -9,7 +9,16 @@
     (number (write-to-string x))
     (symbol (djula::resolve-variable-phrase (list x)))))
 
-;; This now works with variables as well as strings!
+(defun select-type (value)
+  (etypecase value
+    (symbol (case value
+              (:t t)
+              (:nil nil)
+              (t (djula::resolve-variable-phrase (djula::parse-variable-phrase (string value)))))) ; @TODO: Bit type comes from here
+    (string value)
+    (bit (write-to-string value))
+    (number (write-to-string value))))
+
 (djula:def-tag-compiler :static (path)
   (lambda (stream)
     (multiple-value-bind (val val-error)
@@ -19,12 +28,17 @@
          (format stream "~A/~A" (getf (envy:config :malaga/settings) :static-url) val))
 
         (val-error
-         (format stream "~A" val-error))))))
+         (format stream val-error))))))
 
 (djula:def-tag-compiler :url (name &rest args)
-  (lambda (stream)
-    (let ((args (loop :for arg :in args :collect (get-type arg))))
-      (format stream (interpolate-url (getf (barghest/routes:get-url name) :url) args)))))
+  (flet ((process-args ()
+           (loop :for arg :in args
+                 :if (stringp (select-type arg))
+                   :collect (select-type arg)
+                 :else
+                   :collect (write-to-string (select-type arg)))))
+    (lambda (stream)
+        (format stream (interpolate-url (getf (barghest/routes:get-url name) :url) (process-args))))))
 
 (defun interpolate-url (url args)
   (cl-ppcre:do-matches-as-strings (match-var "\:[a-zA-Z0-9]*\/" url)

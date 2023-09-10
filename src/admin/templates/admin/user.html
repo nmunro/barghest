@@ -5,7 +5,7 @@
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="{% url :admin-index %}">Admin</a></li>
-          <li class="breadcrumb-item"><a href='{% url :list-objects :object "role" %}'>Roles</a></li>
+          <li class="breadcrumb-item"><a href='{% url :list-objects "user" %}'>Users</a></li>
           <li class="breadcrumb-item active" aria-current="page">{{ item.name }}</li>
         </ol>
       </nav>

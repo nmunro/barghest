@@ -56,7 +56,7 @@
   (apply #'barghest/controllers:create (append `(,(load-controller "role" "auth")) kws)))
 
 (defmethod get-object ((object (eql :user)) id)
-  (flet ((get-role (role) `(:role ,role :selected ,(cerberus:auth (slot-value role 'barghest/admin/models::name)))))
+  (flet ((get-role (role) `(:role ,role :selected ,(cerberus:auth (slot-value role 'barghest/auth/models::name)))))
     (let* ((user (barghest/controllers:get (load-controller "user" "auth") :id id))
            (permissions (barghest/auth/controllers:user-permissions (load-controller "permissions" "auth") user)))
         (barghest/http:render
