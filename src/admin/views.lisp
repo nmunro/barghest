@@ -34,8 +34,14 @@
     ((cerberus:auth "admin")
       (return-from admin (barghest/http:render "admin/admin.html" :msg "Barghest Admin")))
 
+    ((and (cerberus:logged-in-p) (not (cerberus:auth "admin")))
+     (return-from admin (barghest/http:forbidden "admin/403.html" :msg "You are not authorized to view this page")))
+
+    ((barghest/http:get-next-url)
+     (return-from admin (barghest/http:redirect "/auth/login/" :next-url (barghest/http:get-next-url))))
+
     (t
-     (return-from admin (barghest/http:redirect "/auth/login/" :return-url t)))))
+     (return-from admin (barghest/http:redirect "/auth/login/")))))
 
 (defgeneric create-object (object kws)
   (:documentation "Create an object"))
@@ -124,10 +130,13 @@
             (return-from process-object (delete-object (intern (string-upcase object) "KEYWORD") obj)))))))
 
 (defun get (params)
-  (unless (cerberus:auth "admin")
-    (return-from get (barghest/http:redirect "/admin/" :return-url t)))
-
   (cond
+    ((and (cerberus:logged-in-p) (not (cerberus:auth "admin")))
+     (return-from get (barghest/http:forbidden "admin/403.html" :msg "You are not authorized to view this page")))
+
+    ((not (cerberus:auth "admin"))
+     (return-from get (barghest/http:redirect "/admin/" :next-url (barghest/http:get-current-url))))
+
     ((and (equalp (cdr (assoc :object params :test #'equal)) "user") (cdr (assoc :id params :test #'equal)))
       (get-object :user (cdr (assoc :id params :test #'equal))))
 

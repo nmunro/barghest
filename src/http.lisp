@@ -5,6 +5,8 @@
            #:not-allowed
            #:redirect
            #:forbidden
+           #:get-current-url
+           #:get-next-url
            #:render))
 
 (in-package barghest/http)
@@ -28,48 +30,6 @@
       (t
        (redirect "/admin/login" :next-url (get-current-url))))))
 
-(defun redirect (url &key next-url return-url)
-  (cond
-    ((and next-url return-url)
-     (error 'redirect-error :message "Can't use next-url and return together"))
-
-    ((and next-url (string= next-url ""))
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" (format nil "~A" url)))))
-
-    ((and return-url (string= return-url ""))
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" (format nil "~A" url)))))
-
-    ((and return-url (str:contains? "?" url))
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" (format nil "~A&next=~A" url (lack.request:request-uri ningle:*request*))))))
-
-    ((and return-url (not (str:contains? "?" url)))
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" (format nil "~A?next=~A" url (lack.request:request-uri ningle:*request*))))))
-
-    ((and next-url (str:contains? "?" url))
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" (format nil "~A&next=~A" url next-url)))))
-
-    ((and next-url (not (str:contains? "?" url)))
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" (format nil "~A?next=~A" url next-url)))))
-
-    (t
-     (setf (lack.response:response-headers ningle:*response*)
-           (append (lack.response:response-headers ningle:*response*)
-                   (list "Location" url)))))
-
-  (setf (lack.response:response-status ningle:*response*) "303"))
-
 (defun forbidden (template &key msg)
   (setf (lack.response:response-status ningle:*response*) "403")
   (render template :msg msg))
@@ -83,3 +43,43 @@
 
 (defun get-next-url ()
   (format nil "~A" (or (cdr (assoc "next" (lack.request:request-query-parameters ningle:*request*) :test #'equal)) "")))
+
+(defun build-url-query-params (url next)
+  (setf (quri:uri-query-params url) (remove-if (lambda (entry) (string= "next" entry)) (quri:uri-query-params url) :key #'car))
+  (push (cons "next" next) (quri:uri-query-params url))
+  (quri:uri-query-params url))
+
+(defun get-args (url next)
+  (loop :for arg :in (build-url-query-params url next)
+        :if (string= (car arg) "next")
+          :collect (format nil "~A=~A" (car arg) (cdr arg))
+        :else
+          :collect (format nil "~A=~A" (car arg) (quri:url-encode (cdr arg)))))
+
+(defun remove-args-from-url (data)
+  (multiple-value-bind (url start end)
+      (quri:parse-query (format nil "~A" data))
+    (declare (ignore end))
+    (subseq (format nil "~A" url) 0 (1- start))))
+
+(defun redirect-url (url next)
+  (cond
+    ((and (string/= "" next) (not (quri:uri-query-params url)))
+     (return-from redirect-url (format nil "~A?next=~A" url next)))
+
+    ((and (string= "" next) (not (quri:uri-query-params url)))
+      (return-from redirect-url (format nil "~A" url)))
+
+    ((and (string= "" next) (quri:uri-query-params url))
+      (return-from redirect-url (format nil "~A?~{~A~^&~}" (remove-args-from-url url) (get-args url next))))
+
+    ((and (string/= "" next) (quri:uri-query-params url))
+      (return-from redirect-url (format nil "~A?~{~A~^&~}" (remove-args-from-url url) (get-args url next))))
+
+    (t
+      (return-from redirect-url (format nil "~A?~{~A~^&~}" url (get-args url))))))
+
+(defun redirect (url &key (next-url ""))
+  (setf (lack.response:response-headers ningle:*response*)
+        (append (lack.response:response-headers ningle:*response*) (list "Location" (redirect-url (quri:uri url) next-url))))
+  (setf (lack.response:response-status ningle:*response*) "303"))

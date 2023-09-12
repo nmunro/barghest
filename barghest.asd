@@ -8,6 +8,7 @@
                :djula
                :clop
                :cl-fad
+               :cl-ppcre
                :ppath
                :envy
                :str

@@ -14,7 +14,7 @@
     (symbol (case value
               (:t t)
               (:nil nil)
-              (t (djula::resolve-variable-phrase (djula::parse-variable-phrase (string value))))))
+              (t (djula::resolve-variable-phrase (djula::parse-variable-phrase (string value)))))) ; @TODO: Bit type comes from here
     (string value)
     (bit (write-to-string value))
     (number (write-to-string value))))
