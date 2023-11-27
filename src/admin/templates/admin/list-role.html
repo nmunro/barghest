@@ -1,0 +1,46 @@
+{% extends "layouts/default.html" %}
+{% block content %}
+  <div class="row">
+    <div class="col-md-12">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url :admin-index %}">Admin</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Roles</li>
+        </ol>
+      </nav>
+    </div>
+  </div>
+
+  <form method="POST" action='{% url :list-objects "role" %}'>
+    <div class="row">
+      <div class="col-md-2">
+        <select class="form-control">
+          <option value="-" selected>-</option>
+          <option value="delete">Delete</option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <input type="submit" name="action" value="Go" class="btn btn-primary form-control"></input>
+      </div>
+    </div>
+
+    {% if csrf-token %}
+      <input type="hidden" name="csrf-token" id="csrf-token" value="{{ csrf-token }}"></input>
+    {% endif %}
+    <table class="table">
+      <thead>
+        <th><input type="checkbox"></th>
+        <th>Name</th>
+      </thead>
+      <tbody>
+        {% for item in items %}
+          <tr>
+            <td><input type="checkbox" value="{{ item.id }}" name="role"></td>
+            <td><a href='{% url :get-object "role" item.id %}'>{{ item.name }}</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </form>
+{% endblock %}

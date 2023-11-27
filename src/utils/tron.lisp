@@ -2,7 +2,9 @@
   (:use :cl)
   (:export #:alist-to-plist
            #:split-into-pairs
-           #:make-keyword))
+           #:string-to-keyword
+           #:make-keyword
+           #:get-project-path))
 
 (in-package barghest/utils/tron)
 
@@ -16,3 +18,9 @@
   (loop :for item :in alist
         :collect (make-keyword (car item))
         :collect (cdr item)))
+
+(defun get-project-path (project &key (path ""))
+  (asdf:system-relative-pathname project path))
+
+(defun string-to-keyword (s)
+  (format nil ":~A" (string-downcase s)))

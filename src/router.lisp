@@ -3,11 +3,12 @@
   (:export #:+urls+
            #:defroute
            #:mount
+           #:get-url
            #:path))
 
 (in-package barghest/routes)
 
-(defparameter +urls+ '())
+(defparameter +urls+ (make-hash-table :test #'equal))
 
 (defun defroute (app route fn &key (method :GET))
   (setf (ningle:route app route :method method) fn))
@@ -30,7 +31,9 @@
           (mount-route app u :prefix prefix)))))
 
 (defun mount-route (app url &key (prefix ""))
-  (let ((route (defroute app (format nil "~A~A" prefix (getf url :url)) (getf url :view) :method (getf url :method))))
-      (when (string/= (getf url :name) "")
-        (push (getf url :url) +urls+)
-        (push (getf url :name) +urls+))))
+  (let ((route (defroute app (format nil "~A~A" prefix (getf url :url)) (getf url :view) :method (getf url :method)))
+        (id (getf url :name (getf url :url))))
+    (setf (gethash id +urls+) url)))
+
+(defun get-url (url)
+  (gethash url +urls+))

@@ -8,5 +8,5 @@
   (format t "Registering Model: ~A~%" app))
 
 (defun main ()
-  (register-model 'barghest/admin/models:user)
-  (register-model 'barghest/admin/models:role))
+  (register-model 'barghest/auth/models:user)
+  (register-model 'barghest/auth/models:role))

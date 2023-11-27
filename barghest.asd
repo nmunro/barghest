@@ -8,9 +8,12 @@
                :djula
                :clop
                :cl-fad
+               :cl-pass
+               :cl-ppcre
                :ppath
                :envy
                :str
+               :prompt-for
                :cerberus)
   :components ((:module "src"
                 :components
@@ -27,15 +30,21 @@
                  (:file "http")
                  (:file "crypt")
                  (:file "controllers")
+                 (:file "tags")
+                 (:module "auth"
+                  :components
+                  ((:file "models")
+                   (:file "controllers")
+                   (:file "main")
+                   (:file "views")
+                   (:file "urls")))
                  (:module "admin"
                   :components
                   ((:file "models")
                    (:file "controllers")
                    (:file "views")
                    (:file "urls")
-                   (:file "auth")
-                   (:file "admin")))
-                 (:file "auth"))))
+                   (:file "admin"))))))
   :description "Generate a skeleton for modern project"
   :in-order-to ((test-op (test-op "barghest/tests"))))
 
