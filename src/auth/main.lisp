@@ -16,16 +16,12 @@
     (setf (slot-value user 'barghest/auth/models::password) password-hash)
     (mito:save-dao user)))
 
-(defun create-user (&key (username nil username-p) (email nil email-p) (roles (list "user")))
-  (unless (and username-p email-p)
-    (error "Both username and email *must* be provided"))
-
-  (let* ((pass (barghest/crypt:make-user-password 16))
-         (hash (cl-pass:hash pass :type :pbkdf2-sha256 :iterations 10000))
+(defun create-user (&key (username nil username-p) (email nil email-p) (pass (barghest/crypt:make-user-password 16) pass-p) (roles (list "user")))
+  (let* ((hash (cl-pass:hash pass :type :pbkdf2-sha256 :iterations 10000))
          (user (barghest/controllers:get-or-create barghest/auth/controllers:+user+ :name username :password hash :email email)))
     (dolist (role roles)
       (barghest/controllers:get-or-create
-         barghest/auth/controllers:+permissions+
+         barghest/auth/controllers:+permission+
          :user user
          :role (barghest/controllers:get-or-create barghest/auth/controllers:+role+ :name role)))
     user))
@@ -38,7 +34,7 @@
 
 (defun user-roles (user)
   (loop :for role
-        :in (barghest/auth/controllers:search barghest/auth/controllers:+permissions+ :player (barghest/controllers:get barghest/auth/controllers:+user+ :name user))
+        :in (barghest/auth/controllers:search barghest/auth/controllers:+permission+ :player (barghest/controllers:get barghest/auth/controllers:+user+ :name user))
         :collect (slot-value (slot-value role 'barghest/auth/models:role) 'barghest/auth/models::name)))
 
 (defun user-csrf-token (user)

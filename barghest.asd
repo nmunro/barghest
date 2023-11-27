@@ -8,10 +8,12 @@
                :djula
                :clop
                :cl-fad
+               :cl-pass
                :cl-ppcre
                :ppath
                :envy
                :str
+               :prompt-for
                :cerberus)
   :components ((:module "src"
                 :components
@@ -33,9 +35,9 @@
                   :components
                   ((:file "models")
                    (:file "controllers")
+                   (:file "main")
                    (:file "views")
-                   (:file "urls")
-                   (:file "main")))
+                   (:file "urls")))
                  (:module "admin"
                   :components
                   ((:file "models")

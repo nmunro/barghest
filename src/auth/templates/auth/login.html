@@ -9,21 +9,21 @@
 </div>
 
 {% if next-url %}
-  <form class="row g-3" action='{% url :login-post %}?next={{ next-url }}' method="POST">
+  <form class="row g-3 form" action='{% url :login-post %}?next={{ next-url }}' method="POST">
 {% else %}
-  <form class="row g-3" action='{% url :login-post %}' method="POST">
+  <form class="row g-3 form" action='{% url :login-post %}' method="POST">
 {% endif %}
-  <div class="col-md-6">
+  <div class="form-group">
     <label for="username" class="form-label">User:</label>
     <input type="text" class="form-control" id="username" name="username">
   </div>
 
-  <div class="col-md-6">
+  <div class="form-group">
     <label for="password" class="form-label">Password:</label>
     <input type="password" class="form-control" id="password" name="password">
   </div>
 
-  <div class="col-12">
+  <div class="form-group">
     <button type="submit" class="btn btn-primary">Login</button>
   </div>
 </form>

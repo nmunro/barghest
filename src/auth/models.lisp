@@ -2,7 +2,7 @@
   (:use :cl)
   (:export #:user
            #:role
-           #:permissions))
+           #:permission))
 
 (in-package barghest/auth/models)
 
@@ -10,13 +10,13 @@
   ((name     :col-type (:varchar 255))
    (email    :col-type (:varchar 255))
    (password :col-type (or (:varchar 512) :null)))
-  (:unique-keys name))
+  (:unique-keys email))
 
 (mito:deftable role ()
   ((name :col-type (:varchar 255)))
   (:unique-keys name))
 
-(mito:deftable permissions ()
+(mito:deftable permission ()
   ((user :col-type user)
    (role :col-type role))
   (:unique-keys (user role)))

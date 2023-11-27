@@ -4,7 +4,7 @@
   (:import-from :barghest/auth/controllers
                 :+user+
                 :+role+
-                :+permissions+)
+                :+permission+)
   (:export #:add
            #:admin
            #:get
@@ -64,7 +64,7 @@
 (defmethod get-object ((object (eql :user)) id)
   (flet ((get-role (role) `(:role ,role :selected ,(cerberus:auth (slot-value role 'barghest/auth/models::name)))))
     (let* ((user (barghest/controllers:get (load-controller "user" "auth") :id id))
-           (permissions (barghest/auth/controllers:user-permissions (load-controller "permissions" "auth") user)))
+           (permission (barghest/auth/controllers:user-permission (load-controller "permission" "auth") user)))
         (barghest/http:render
             "admin/user.html"
             :item user
@@ -93,12 +93,12 @@
   (mito:save-dao obj)
   (setf kws (remove :permission kws))
 
-  (dolist (perm (barghest/auth/controllers:user-permissions (load-controller "permissions" "auth") obj))
-    (barghest/controllers:delete (load-controller "permissions" "auth") :id (mito:object-id perm)))
+  (dolist (perm (barghest/auth/controllers:user-permission (load-controller "permission" "auth") obj))
+    (barghest/controllers:delete (load-controller "permission" "auth") :id (mito:object-id perm)))
 
   (dolist (kw kws)
     (barghest/controllers:get-or-create
-     (load-controller "permissions" "auth")
+     (load-controller "permission" "auth")
      :user obj
      :role (barghest/controllers:get (load-controller "role" "auth") :name kw))))
 
